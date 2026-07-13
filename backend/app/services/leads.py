@@ -120,6 +120,7 @@ def _process(places: list[dict]) -> list[dict]:
         website = p.get("websiteUri", "")
         rows.append(
             {
+                "place_id": p.get("id", ""),
                 "name": p.get("displayName", {}).get("text", ""),
                 "phone": p.get("nationalPhoneNumber", ""),
                 "website": website,

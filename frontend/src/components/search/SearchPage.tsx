@@ -5,10 +5,12 @@ import {
   DownloadIcon,
   SearchIcon,
 } from "@/components/icons";
+import { InfoTip } from "@/components/search/InfoTip";
 import { LocationAutocomplete } from "@/components/search/LocationAutocomplete";
 import { ApiError } from "@/lib/api/client";
 import {
   exportXlsx,
+  getSavedLeads,
   listServices,
   runSearch,
   type Lead,
@@ -16,13 +18,17 @@ import {
 } from "@/lib/api/leads";
 import { downloadBlob, leadsToCsv, slug } from "@/lib/csv";
 
-const RADIUS_OPTIONS = [
-  { value: 8, label: "5 mi" },
-  { value: 15, label: "10 mi" },
-  { value: 25, label: "15 mi" },
-  { value: 40, label: "25 mi" },
-  { value: 80, label: "50 mi" },
-];
+export interface SavedSearchRef {
+  id: string;
+  service: string;
+  location: string;
+}
+
+const COVERAGE_OPTIONS = [
+  { value: 8, label: "City" },
+  { value: 15, label: "Metro" },
+  { value: 40, label: "Wide" },
+] as const;
 
 const RATING_OPTIONS = [
   { value: 0, label: "Any rating" },
@@ -33,7 +39,12 @@ const RATING_OPTIONS = [
 
 type WebsiteFilter = "any" | "yes" | "no";
 
-export function SearchPage() {
+interface SearchPageProps {
+  /** When set, load and show the leads from a previously saved search. */
+  savedSearch?: SavedSearchRef | null;
+}
+
+export function SearchPage({ savedSearch = null }: SearchPageProps) {
   const [services, setServices] = useState<ServicePreset[]>([]);
   const [service, setService] = useState("HVAC");
   const [location, setLocation] = useState("");
@@ -41,6 +52,7 @@ export function SearchPage() {
   const [radiusKm, setRadiusKm] = useState(15);
 
   const [loading, setLoading] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<"scrape" | "load">("scrape");
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [meta, setMeta] = useState<{ service: string; location: string } | null>(null);
@@ -59,6 +71,38 @@ export function SearchPage() {
         // Non-critical; the input still accepts a custom service.
       });
   }, []);
+
+  // Load a previously saved search's leads when opened from the dashboard.
+  useEffect(() => {
+    if (!savedSearch) return;
+    let cancelled = false;
+    setService(savedSearch.service);
+    setLocation(savedSearch.location);
+    setLoadingMode("load");
+    setLoading(true);
+    setError(null);
+    resetFilters();
+    getSavedLeads(savedSearch.id)
+      .then((rows) => {
+        if (cancelled) return;
+        setLeads(rows);
+        setMeta({ service: savedSearch.service, location: savedSearch.location });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(
+          err instanceof Error ? err.message : "Couldn't load saved leads.",
+        );
+        setLeads(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedSearch]);
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
@@ -91,6 +135,7 @@ export function SearchPage() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!location.trim() || loading) return;
+    setLoadingMode("scrape");
     setLoading(true);
     setError(null);
     try {
@@ -98,7 +143,7 @@ export function SearchPage() {
         service,
         location: location.trim(),
         deep,
-        radius_km: radiusKm,
+        radius_km: deep ? radiusKm : 15,
       });
       setLeads(res.leads);
       setMeta({ service: res.service, location: res.location });
@@ -173,18 +218,27 @@ export function SearchPage() {
           />
         </div>
 
-        <div className="search-form__field search-form__field--radius">
-          <label className="field-label" htmlFor="radius">
-            Radius
-          </label>
+        <div
+          className={`search-form__field search-form__field--coverage${deep ? "" : " search-form__field--disabled"}`}
+        >
+          <div className="field-label-row">
+            <label className="field-label" htmlFor="coverage">
+              Coverage
+            </label>
+            <InfoTip label="About coverage area" placement="top">
+              How far deep search scans from your location. City is tight;
+              Metro is the default; Wide includes outer suburbs. Only applies
+              when deep search is on.
+            </InfoTip>
+          </div>
           <select
-            id="radius"
+            id="coverage"
             className="text-input"
             value={radiusKm}
             onChange={(e) => setRadiusKm(Number(e.target.value))}
-            disabled={loading}
+            disabled={loading || !deep}
           >
-            {RADIUS_OPTIONS.map((r) => (
+            {COVERAGE_OPTIONS.map((r) => (
               <option key={r.value} value={r.value}>
                 {r.label}
               </option>
@@ -192,14 +246,24 @@ export function SearchPage() {
           </select>
         </div>
 
-        <label className="search-form__deep" title="Tiles a grid for deeper coverage (slower)">
+        <div className="search-form__deep">
           <input
+            id="deep-search"
             type="checkbox"
             checked={deep}
             onChange={(e) => setDeep(e.target.checked)}
           />
-          <span>Deep search</span>
-        </label>
+          <div className="search-form__deep-label">
+            <label className="search-form__deep-text" htmlFor="deep-search">
+              Deep search
+            </label>
+            <InfoTip label="About deep search">
+              Google caps each query at ~60 results. Deep search tiles a grid
+              around your location to pull 100–300+ unique leads from nearby
+              areas. Slower and uses more API calls.
+            </InfoTip>
+          </div>
+        </div>
 
         <button type="submit" className="btn btn--primary search-form__submit" disabled={loading}>
           <SearchIcon aria-hidden="true" />
@@ -218,8 +282,16 @@ export function SearchPage() {
           <div className="search-loading">
             <span className="spinner" aria-hidden="true" />
             <p>
-              Scraping {service} in {location}
-              {deep ? " (deep coverage — this can take up to a minute)…" : "…"}
+              {loadingMode === "load" ? (
+                <>
+                  Loading saved leads for {service} in {location}…
+                </>
+              ) : (
+                <>
+                  Scraping {service} in {location}
+                  {deep ? " (deep coverage — this can take up to a minute)…" : "…"}
+                </>
+              )}
             </p>
           </div>
         </div>

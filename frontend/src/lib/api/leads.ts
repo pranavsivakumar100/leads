@@ -3,6 +3,7 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { supabase } from "@/lib/supabase";
 
 export interface Lead {
+  place_id: string;
   name: string;
   phone: string;
   website: string;
@@ -32,6 +33,24 @@ export interface LeadSearchResponse {
   location: string;
   total: number;
   leads: Lead[];
+  search_id: string | null;
+}
+
+export interface SearchHistoryItem {
+  id: string;
+  service: string;
+  location: string;
+  deep: boolean;
+  radius_km: number | null;
+  total_results: number;
+  created_at: string;
+}
+
+export interface DashboardStats {
+  total_leads: number;
+  searches_run: number;
+  markets: number;
+  avg_leads_per_search: number;
 }
 
 export interface LeadSearchParams {
@@ -49,6 +68,18 @@ export function listServices(): Promise<ServicePreset[]> {
 export function autocompleteLocations(input: string): Promise<LocationSuggestion[]> {
   const q = encodeURIComponent(input.trim());
   return apiFetch<LocationSuggestion[]>(`/search/locations/autocomplete?input=${q}`);
+}
+
+export function listHistory(limit = 8): Promise<SearchHistoryItem[]> {
+  return apiFetch<SearchHistoryItem[]>(`/history?limit=${limit}`);
+}
+
+export function getDashboardStats(): Promise<DashboardStats> {
+  return apiFetch<DashboardStats>("/history/stats");
+}
+
+export function getSavedLeads(searchId: string): Promise<Lead[]> {
+  return apiFetch<Lead[]>(`/history/${searchId}/leads`);
 }
 
 export function runSearch(params: LeadSearchParams): Promise<LeadSearchResponse> {

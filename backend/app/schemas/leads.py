@@ -10,6 +10,7 @@ class LeadSearchRequest(BaseModel):
 
 
 class Lead(BaseModel):
+    place_id: str = ""
     name: str
     phone: str = ""
     website: str = ""
@@ -27,6 +28,24 @@ class LeadSearchResponse(BaseModel):
     location: str
     total: int
     leads: list[Lead]
+    search_id: str | None = None
+
+
+class SearchHistoryItem(BaseModel):
+    id: str
+    service: str
+    location: str
+    deep: bool
+    radius_km: float | None = None
+    total_results: int
+    created_at: str
+
+
+class DashboardStats(BaseModel):
+    total_leads: int = 0
+    searches_run: int = 0
+    markets: int = 0
+    avg_leads_per_search: float = 0.0
 
 
 class LeadExportRequest(BaseModel):

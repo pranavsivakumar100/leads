@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import { AuthModal } from "@/components/auth/AuthModal";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
-import { SearchPage } from "@/components/search/SearchPage";
-import { TargetIcon } from "@/components/icons";
+import { SearchPage, type SavedSearchRef } from "@/components/search/SearchPage";
+import { CheckIcon, TargetIcon } from "@/components/icons";
 import { useAuth } from "@/hooks/useAuth";
 
 import { Sidebar, type Tab } from "./Sidebar";
@@ -25,6 +25,7 @@ export function AppLayout() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [savedSearch, setSavedSearch] = useState<SavedSearchRef | null>(null);
 
   if (loading) {
     return (
@@ -38,22 +39,53 @@ export function AppLayout() {
     return (
       <>
         <div className="gate">
-          <div className="gate__card">
-            <span className="gate__mark">
-              <TargetIcon aria-hidden="true" />
-            </span>
-            <h1 className="gate__title">Leadflow</h1>
-            <p className="gate__subtitle">
-              Find and export high-quality local business leads in minutes. Sign
-              in to open your dashboard.
-            </p>
-            <button
-              type="button"
-              className="btn btn--primary gate__cta"
-              onClick={() => setAuthOpen(true)}
-            >
-              Sign in to continue
-            </button>
+          <div className="gate__inner">
+            <section className="gate__intro">
+              <div className="gate__brand">
+                <span className="gate__mark">
+                  <TargetIcon aria-hidden="true" />
+                </span>
+                <span className="gate__wordmark">Leadflow</span>
+              </div>
+              <h1 className="gate__headline">
+                Local business leads,
+                <br />
+                ranked and ready to call.
+              </h1>
+              <p className="gate__lede">
+                Search any service in any city. Get scored leads with phone
+                numbers and websites, then export the list in one click.
+              </p>
+              <ul className="gate__points">
+                {[
+                  "Every result scored by review quality",
+                  "Deep coverage across a whole metro",
+                  "Export straight to CSV or Excel",
+                ].map((point) => (
+                  <li key={point} className="gate__point">
+                    <CheckIcon aria-hidden="true" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <aside className="gate__panel">
+              <h2 className="gate__panel-title">Get started</h2>
+              <p className="gate__panel-sub">
+                Sign in to open your dashboard and run your first search.
+              </p>
+              <button
+                type="button"
+                className="btn btn--primary gate__cta"
+                onClick={() => setAuthOpen(true)}
+              >
+                Sign in to continue
+              </button>
+              <p className="gate__fineprint">
+                Email sign-in — no credit card required.
+              </p>
+            </aside>
           </div>
         </div>
         {authOpen && (
@@ -64,7 +96,22 @@ export function AppLayout() {
   }
 
   const meta = TAB_META[tab];
-  const goToSearch = () => setTab("search");
+
+  const goToSearch = () => {
+    setSavedSearch(null);
+    setTab("search");
+  };
+
+  const openSavedSearch = (ref: SavedSearchRef) => {
+    setSavedSearch(ref);
+    setTab("search");
+  };
+
+  const handleTabChange = (next: Tab) => {
+    // Selecting Search from the sidebar starts a fresh search.
+    if (next === "search") setSavedSearch(null);
+    setTab(next);
+  };
 
   return (
     <div className={`app-layout${sidebarCollapsed ? " app-layout--sidebar-collapsed" : ""}`}>
@@ -72,7 +119,7 @@ export function AppLayout() {
         activeTab={tab}
         collapsed={sidebarCollapsed}
         userEmail={session.user.email ?? null}
-        onTabChange={setTab}
+        onTabChange={handleTabChange}
         onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
         onSignOut={() => void signOut()}
       />
@@ -80,9 +127,12 @@ export function AppLayout() {
         <TopBar title={meta.title} subtitle={meta.subtitle} onNewSearch={goToSearch} />
         <div className="app-content">
           {tab === "dashboard" ? (
-            <DashboardPage onNewSearch={goToSearch} />
+            <DashboardPage
+              onNewSearch={goToSearch}
+              onOpenSearch={openSavedSearch}
+            />
           ) : (
-            <SearchPage />
+            <SearchPage savedSearch={savedSearch} />
           )}
         </div>
       </div>

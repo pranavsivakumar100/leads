@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 
-from app.api.deps import CurrentUserDep, SettingsDep
+from app.api.deps import CurrentUserDep, SettingsDep, SupabaseDep
 from app.schemas.leads import (
     LeadExportRequest,
     LeadSearchRequest,
@@ -12,6 +12,7 @@ from app.schemas.leads import (
     LocationSuggestion,
     ServicePreset,
 )
+from app.services import history as history_service
 from app.services import leads as leads_service
 from app.services.export import leads_to_xlsx
 from app.services.places import PlacesClient, PlacesError
@@ -63,7 +64,8 @@ def list_services() -> list[ServicePreset]:
 async def run_search(
     payload: LeadSearchRequest,
     settings: SettingsDep,
-    _user: CurrentUserDep,
+    user: CurrentUserDep,
+    client: SupabaseDep,
 ) -> LeadSearchResponse:
     api_key = _require_api_key(settings)
     try:
@@ -81,11 +83,24 @@ async def run_search(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)
         ) from exc
 
+    # Best-effort persistence — a DB failure never breaks the search response.
+    search_id = await run_in_threadpool(
+        history_service.save_search,
+        client,
+        user.id,
+        service=payload.service,
+        location=payload.location,
+        deep=payload.deep,
+        radius_km=payload.radius_km if payload.deep else None,
+        leads=rows,
+    )
+
     return LeadSearchResponse(
         service=payload.service,
         location=payload.location,
         total=len(rows),
         leads=rows,
+        search_id=search_id,
     )
 
 

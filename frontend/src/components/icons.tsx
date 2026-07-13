@@ -119,6 +119,20 @@ export const PanelToggleIcon = (p: IconProps) => (
   </Svg>
 );
 
+export const InfoIcon = (p: IconProps) => (
+  <Svg {...p} strokeWidth={1.75}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5" />
+    <circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none" />
+  </Svg>
+);
+
+export const CheckIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M20 6 9 17l-5-5" />
+  </Svg>
+);
+
 /** Multicolor Google "G" mark. */
 export const GoogleIcon = (p: SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...p}>

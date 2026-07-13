@@ -79,8 +79,11 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 
 ### 3. Supabase project
 
-- **Project:** Leadflow — ref `vdwprpfcwrglorhlmyuj`, org: Dreams, region: us-east-1
+- **Project:** Leadflow — ref `vdwprpfcwrglorhlmyuj`, region: us-east-1
 - **Dashboard:** https://supabase.com/dashboard/project/vdwprpfcwrglorhlmyuj
+- **Dreams is separate:** Dreams uses its own project `toskpiypmhgefwxcbuto` (`companions`, `conversations`, `messages`). Leadflow only has `searches` + `leads` — no Dreams tables or keys in this repo.
+- **Org cleanup (Jul 13):** Leadflow project currently sits under the shared **Dreams** org in the Supabase dashboard. A dedicated **Leadflow** org was created (`psykhcylmmdjjdhjnjri`). Transfer the project there via [Project Settings → General → Transfer project](https://supabase.com/dashboard/project/vdwprpfcwrglorhlmyuj/settings/general) → target org **Leadflow**. API keys/URL stay the same; no app env changes needed.
+- **MCP:** `~/.cursor/mcp.json` now points at `vdwprpfcwrglorhlmyuj` (was incorrectly pinned to Dreams).
 - `.env` files created locally (gitignored); only `.env.example` in repo
 
 #### Database tables (added late Jul 12)
@@ -93,8 +96,6 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 - Both have **RLS enabled** with owner-only select/insert/delete policies (`auth.uid() = user_id`).
 - Backend writes with the service key (bypasses RLS) but always scopes queries by `user_id` explicitly (`app/services/history.py`).
 - Persistence is **best-effort**: a DB failure never breaks the search response.
-- ⚠️ The Supabase MCP in `~/.cursor/mcp.json` is pinned to the **Dreams** project (`toskpiypmhgefwxcbuto`), not Leadflow. Migration was applied via the Supabase Management API instead. Consider re-pointing the MCP `--project-ref` to `vdwprpfcwrglorhlmyuj`.
-- After DDL via the Management API, PostgREST needs `notify pgrst, 'reload schema';` or new tables 404 with PGRST205.
 
 ### 4. Git
 
@@ -174,6 +175,30 @@ Email OTP works out of the box.
 
 ---
 
+## Deployment (Railway — Jul 12, 2026)
+
+**Project:** `Leadflow` — ID `270ea311-9f0a-4d9b-b4bd-abf17aff67ac`  
+**Dashboard:** https://railway.com/project/270ea311-9f0a-4d9b-b4bd-abf17aff67ac
+
+| Service | URL | Deploy root |
+|---|---|---|
+| **frontend** | https://frontend-production-a5c6.up.railway.app | `frontend/` |
+| **backend** | https://backend-production-501f.up.railway.app | `backend/` |
+
+**Backend env (Railway):** `APP_NAME`, `ENVIRONMENT=production`, `CORS_ORIGINS` (includes prod frontend + localhost dev), `GOOGLE_MAPS_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+
+**Frontend env (Railway, build-time):** `VITE_API_BASE_URL=https://backend-production-501f.up.railway.app/api/v1`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+**Redeploy manually:**
+```bash
+cd backend && railway up . --path-as-root --service backend --detach
+cd frontend && railway up . --path-as-root --service frontend --detach
+```
+
+**Post-deploy todo:** Add `https://frontend-production-a5c6.up.railway.app` to Supabase Auth → URL Configuration (Site URL + Redirect URLs) so sign-in works in prod.
+
+---
+
 ## Next steps (discussed, not built)
 
 - [x] Saved searches / lead history per user (Supabase tables + RLS) ✅ built
@@ -183,7 +208,7 @@ Email OTP works out of the box.
 - [ ] Multi-service batch search in web UI
 - [ ] Phone-present filter
 - [ ] Deep search progress streaming / background jobs
-- [ ] Railway deploy (configs exist: `railway.json` in both dirs)
+- [ ] Railway deploy (configs exist: `railway.json` in both dirs) ✅ deployed Jul 12 — see **Deployment** section below
 - [ ] Root README with setup instructions
 
 ---

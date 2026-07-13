@@ -120,6 +120,21 @@ class CallSessionCreate(BaseModel):
     offer: str = Field("", max_length=2000)
 
 
+class TranscriptTurn(BaseModel):
+    role: str = Field(..., pattern="^(prospect|rep)$")
+    text: str = Field(..., max_length=4000)
+
+
+class CoachRequest(BaseModel):
+    """Rolling transcript from the client; freshest state lives in the browser."""
+
+    transcript: list[TranscriptTurn] = Field(default_factory=list, max_length=200)
+
+
+class CoachSuggestion(BaseModel):
+    text: str
+
+
 class CallSessionUpdate(BaseModel):
     outcome: str | None = Field(
         None,

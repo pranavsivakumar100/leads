@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PhoneIcon, PlusIcon, TrashIcon } from "@/components/icons";
+import { MicIcon, PhoneIcon, PlusIcon, TrashIcon } from "@/components/icons";
+
+import { LiveCallView } from "./LiveCallView";
 import {
   createSession,
   deleteSession,
@@ -390,8 +392,9 @@ function SessionDetail({
   const [notes, setNotes] = useState("");
   const [offer, setOffer] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const [live, setLive] = useState(false);
 
-  useEffect(() => {
+  const loadSession = useCallback(() => {
     getSession(sessionId)
       .then((s) => {
         setSession(s);
@@ -400,6 +403,10 @@ function SessionDetail({
       })
       .catch(() => onError("Couldn't load the session."));
   }, [sessionId, onError]);
+
+  useEffect(() => {
+    loadSession();
+  }, [loadSession]);
 
   const script = useMemo(
     () => scripts.find((s) => s.id === session?.script_id) ?? null,
@@ -463,6 +470,23 @@ function SessionDetail({
     );
   }
 
+  if (live) {
+    return (
+      <div className="search-page">
+        <section className="panel">
+          <LiveCallView
+            session={session}
+            script={script}
+            onEnd={() => {
+              setLive(false);
+              loadSession();
+            }}
+          />
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="search-page">
       <section className="panel">
@@ -477,6 +501,14 @@ function SessionDetail({
             </p>
           </div>
           <div className="results-actions">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => setLive(true)}
+            >
+              <MicIcon aria-hidden="true" />
+              Live call
+            </button>
             <select
               className="filter-select"
               value={session.outcome}

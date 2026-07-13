@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # Use the service-role key on the server (never expose it to the frontend).
     supabase_service_key: str = ""
 
+    # AI sales coach — any OpenAI-compatible chat completions API.
+    openai_api_key: str = ""
+    coach_model: str = "gpt-4o-mini"
+    coach_base_url: str = "https://api.openai.com/v1"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
@@ -32,6 +37,10 @@ class Settings(BaseSettings):
     @property
     def scraping_enabled(self) -> bool:
         return bool(self.google_maps_api_key)
+
+    @property
+    def coach_enabled(self) -> bool:
+        return bool(self.openai_api_key)
 
 
 @lru_cache

@@ -171,6 +171,22 @@ export function deleteSession(sessionId: string): Promise<void> {
   return apiFetch<void>(`/sessions/${sessionId}`, { method: "DELETE" });
 }
 
+export interface TranscriptTurn {
+  role: "prospect" | "rep";
+  text: string;
+}
+
+/** Ask the AI coach for the rep's next line. Also saved as a coach event. */
+export function coachNextLine(
+  sessionId: string,
+  transcript: TranscriptTurn[],
+): Promise<{ text: string }> {
+  return apiFetch<{ text: string }>(`/sessions/${sessionId}/coach`, {
+    method: "POST",
+    body: JSON.stringify({ transcript }),
+  });
+}
+
 export function addSessionEvent(
   sessionId: string,
   event: { role: EventRole; text: string; t_ms?: number },

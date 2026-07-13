@@ -5,6 +5,8 @@ import { CampaignsPage } from "@/components/campaigns/CampaignsPage";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { LeadsPage } from "@/components/leads/LeadsPage";
 import { SearchPage, type SavedSearchRef } from "@/components/search/SearchPage";
+import { SkillsPage } from "@/components/skills/SkillsPage";
+import { SessionsPage } from "@/components/sessions/SessionsPage";
 import { CheckIcon, TargetIcon } from "@/components/icons";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -27,6 +29,14 @@ const TAB_META: Record<Tab, { title: string; subtitle: string }> = {
   campaigns: {
     title: "Campaigns",
     subtitle: "Group leads into outreach lists and track progress.",
+  },
+  sessions: {
+    title: "Sessions",
+    subtitle: "Your call history — outcomes, notes, and coaching transcripts.",
+  },
+  skills: {
+    title: "Skills",
+    subtitle: "Your scripts and offers — what you sell and how you pitch it.",
   },
 };
 
@@ -147,6 +157,10 @@ export function AppLayout() {
           {tab === "campaigns" && (
             <CampaignsPage onGoToLeads={() => setTab("leads")} />
           )}
+          {tab === "sessions" && (
+            <SessionsPage onGoToScripts={() => setTab("skills")} />
+          )}
+          {tab === "skills" && <SkillsPage />}
         </div>
       </div>
     </div>

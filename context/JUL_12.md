@@ -58,13 +58,24 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 | GET | `/history/{id}/leads` | Yes | Leads from a saved search |
 | GET | `/leads` | Yes | Master lead library — deduped by place_id across all searches |
 | PATCH | `/leads/{place_id}/status` | Yes | Set outreach status (new/contacted/interested/passed) |
+| GET/POST | `/campaigns` | Yes | List / create outreach campaigns |
+| DELETE | `/campaigns/{id}` | Yes | Delete a campaign (leads stay in library) |
+| GET/POST | `/campaigns/{id}/leads` | Yes | List / bulk-add campaign leads |
+| DELETE | `/campaigns/{id}/leads/{place_id}` | Yes | Remove a lead from a campaign |
+| GET/POST | `/scripts` | Yes | List / create call scripts (frameworks) |
+| PATCH/DELETE | `/scripts/{id}` | Yes | Update / delete a script |
+| GET/POST | `/sessions` | Yes | List / create call sessions |
+| GET/PATCH/DELETE | `/sessions/{id}` | Yes | Get (with events) / update (outcome, notes, end) / delete |
+| POST | `/sessions/{id}/events` | Yes | Append a transcript/coach event to a session |
+| GET/POST | `/offers` | Yes | List / create offers (what you sell) |
+| PATCH/DELETE | `/offers/{id}` | Yes | Update / delete an offer |
 
 **Search params:** `service`, `location`, `deep`, `max_results`, `radius_km` (1–80 km).
 
 #### Frontend (`frontend/`)
 
 - **Auth gate** — sign-in card when logged out; full app when logged in
-- **Sidebar** — Dashboard, Search, Leads, and Campaigns tabs (no separate Exports tab — export lives on each data view)
+- **Sidebar** — Dashboard, Search, Leads, Campaigns, Sessions, Skills (Scripts + Offers combined under one **Skills** tab via a segmented toggle). No separate Exports tab — export lives on each data view.
 - **Dashboard** — KPI cards wired to real data (`/history/stats`) + recent-searches table (`/history`); empty state with CTA when no searches yet
 - **Search page:**
   - Service input (datalist from presets)
@@ -96,6 +107,10 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 | `leads` | Scraped leads linked to their search; unique `(search_id, place_id)`; `outreach_status` column (new/contacted/interested/passed) added Jul 13 for the Leads library |
 | `campaigns` | Named outreach lists: user_id, name, description, created_at (added Jul 13) |
 | `campaign_leads` | Join table campaign ↔ lead by `place_id`; PK `(campaign_id, place_id)` (added Jul 13) |
+| `scripts` | Call frameworks: user_id, name, description, `steps` jsonb (array of {title, body}), timestamps (added Jul 13) |
+| `call_sessions` | One row per call: user_id, lead_place_id/lead_name snapshot, campaign_id?, script_id?, `offer` (what you're selling), outcome, notes, started/ended (added Jul 13) |
+| `session_events` | Timestamped call turns: session_id, role (prospect/rep/coach/system), text, t_ms — the transcript the AI coach will write into (added Jul 13) |
+| `offers` | What the user sells: user_id, name, description (pitch), pricing, `fit_type` (any/no_website/few_reviews/low_rating/high_volume), timestamps (added Jul 13) |
 
 - Both have **RLS enabled** with owner-only select/insert/delete policies (`auth.uid() = user_id`).
 - Backend writes with the service key (bypasses RLS) but always scopes queries by `user_id` explicitly (`app/services/history.py`).
@@ -211,6 +226,9 @@ cd frontend && railway up . --path-as-root --service frontend --detach
 - [x] **Leads tab** ✅ built (Jul 13) — master lead library: dedupes all leads by `place_id` (`times_seen` counts repeats), shows which search found each lead, text/status/website filters, per-lead **outreach status** dropdown (new/contacted/interested/passed — persisted via `outreach_status` column on `leads`, optimistic UI), CSV export of filtered set
 - [x] **Campaigns tab** ✅ built (Jul 13) — named outreach lists built from the lead library. Backend: `GET/POST /campaigns`, `DELETE /campaigns/{id}`, `GET/POST /campaigns/{id}/leads`, `DELETE /campaigns/{id}/leads/{place_id}` (`app/services/campaigns.py`). List view shows per-campaign lead count, % worked progress bar, and interested count; detail view is a lead table with status dropdowns (shared with library), remove-from-campaign, and CSV export. Leads page gained checkbox selection + a bulk "Add to campaign…" picker (with inline "+ New campaign"). Deleting a campaign keeps leads in the library.
 - [x] **Exports tab** — dropped (Jul 13); redundant with per-page CSV/Excel on Search, Leads, and Campaigns. Excel export added to Leads + Campaigns to match Search.
+- [x] **Sales coach foundation** ✅ built (Jul 13) — no live AI yet. **Scripts** tab: CRUD for cold-call frameworks (ordered steps of {title, body}, seeded with a starter template). **Sessions** tab: one record per call (lead snapshot + optional script + outcome + notes), created from a library lead or manual name; detail view is a two-column review — transcript (empty until live coach) + notes on the left, attached script reference on the right; outcome badge + status select. Backend `scripts`/`sessions`/`session_events` tables + services/routes. This is the container the real-time AI coach will write into (`session_events` role=coach/prospect/rep).
+- [x] **Offers + offer-fit qualification** ✅ built (Jul 13) — **Offers** tab (CRUD: name, pitch, pricing, `fit_type`). Offer-fit scoring (`frontend/src/lib/offerFit.ts`) ranks library leads by fit using signals we already scrape (website presence, review count, rating). Leads page gained an "Offer fit" selector + "Strong fit only" toggle + a Fit column (Strong/Possible/Weak with reason), auto-sorted by fit. Sessions "New session" form can pick a saved offer to prefill the offer text. Decision: offer is deliberately NOT a Search input (doesn't change Google results); it's a lens on the library instead — better than the competitor's confused search-box approach.
+- [ ] **AI sales coach (real-time)** — next big build. Plan: prototype audio via **laptop mic on speakerphone** (getUserMedia → streaming STT), later move to **Twilio browser softphone** for dual-channel audio. Streaming LLM prompt = attached script + lead context + rolling transcript → suggested next line, written as `coach` events on the open session. Needs a live call UI (current lead, script, transcript, suggestion) + websockets + latency tuning.
 - [ ] Multi-service batch search in web UI
 - [ ] Phone-present filter
 - [ ] Deep search progress streaming / background jobs

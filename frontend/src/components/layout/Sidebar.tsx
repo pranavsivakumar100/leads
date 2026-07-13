@@ -4,12 +4,20 @@ import {
   DashboardIcon,
   LogOutIcon,
   PanelToggleIcon,
+  PhoneIcon,
   SearchIcon,
+  SparklesIcon,
   TargetIcon,
   UsersIcon,
 } from "@/components/icons";
 
-export type Tab = "dashboard" | "search" | "leads" | "campaigns";
+export type Tab =
+  | "dashboard"
+  | "search"
+  | "leads"
+  | "campaigns"
+  | "sessions"
+  | "skills";
 
 type NavEntry = {
   id: Tab;
@@ -22,6 +30,8 @@ const NAV: NavEntry[] = [
   { id: "search", label: "Search", Icon: SearchIcon },
   { id: "leads", label: "Leads", Icon: UsersIcon },
   { id: "campaigns", label: "Campaigns", Icon: TargetIcon },
+  { id: "sessions", label: "Sessions", Icon: PhoneIcon },
+  { id: "skills", label: "Skills", Icon: SparklesIcon },
 ];
 
 interface SidebarProps {

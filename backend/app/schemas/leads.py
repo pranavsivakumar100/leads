@@ -71,6 +71,31 @@ class OutreachStatusUpdate(BaseModel):
     status: str = Field(..., pattern="^(new|contacted|interested|passed)$")
 
 
+class CampaignStatusCounts(BaseModel):
+    new: int = 0
+    contacted: int = 0
+    interested: int = 0
+    passed: int = 0
+
+
+class Campaign(BaseModel):
+    id: str
+    name: str
+    description: str = ""
+    created_at: str
+    lead_count: int = 0
+    status_counts: CampaignStatusCounts = CampaignStatusCounts()
+
+
+class CampaignCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    description: str = Field("", max_length=300)
+
+
+class CampaignAddLeads(BaseModel):
+    place_ids: list[str] = Field(..., min_length=1, max_length=1000)
+
+
 class LeadExportRequest(BaseModel):
     service: str
     location: str

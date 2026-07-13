@@ -106,6 +106,64 @@ export function setLeadStatus(
   });
 }
 
+export interface CampaignStatusCounts {
+  new: number;
+  contacted: number;
+  interested: number;
+  passed: number;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  lead_count: number;
+  status_counts: CampaignStatusCounts;
+}
+
+export function listCampaigns(): Promise<Campaign[]> {
+  return apiFetch<Campaign[]>("/campaigns");
+}
+
+export function createCampaign(
+  name: string,
+  description = "",
+): Promise<Campaign> {
+  return apiFetch<Campaign>("/campaigns", {
+    method: "POST",
+    body: JSON.stringify({ name, description }),
+  });
+}
+
+export function deleteCampaign(campaignId: string): Promise<void> {
+  return apiFetch<void>(`/campaigns/${campaignId}`, { method: "DELETE" });
+}
+
+export function getCampaignLeads(campaignId: string): Promise<LibraryLead[]> {
+  return apiFetch<LibraryLead[]>(`/campaigns/${campaignId}/leads`);
+}
+
+export function addLeadsToCampaign(
+  campaignId: string,
+  placeIds: string[],
+): Promise<void> {
+  return apiFetch<void>(`/campaigns/${campaignId}/leads`, {
+    method: "POST",
+    body: JSON.stringify({ place_ids: placeIds }),
+  });
+}
+
+export function removeLeadFromCampaign(
+  campaignId: string,
+  placeId: string,
+): Promise<void> {
+  return apiFetch<void>(
+    `/campaigns/${campaignId}/leads/${encodeURIComponent(placeId)}`,
+    { method: "DELETE" },
+  );
+}
+
 export function runSearch(params: LeadSearchParams): Promise<LeadSearchResponse> {
   return apiFetch<LeadSearchResponse>("/search", {
     method: "POST",

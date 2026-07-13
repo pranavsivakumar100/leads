@@ -64,7 +64,7 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 #### Frontend (`frontend/`)
 
 - **Auth gate** — sign-in card when logged out; full app when logged in
-- **Sidebar** — Dashboard + Search tabs active; Leads/Campaigns/Exports marked "Soon"
+- **Sidebar** — Dashboard, Search, Leads, and Campaigns tabs (no separate Exports tab — export lives on each data view)
 - **Dashboard** — KPI cards wired to real data (`/history/stats`) + recent-searches table (`/history`); empty state with CTA when no searches yet
 - **Search page:**
   - Service input (datalist from presets)
@@ -94,6 +94,8 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 |---|---|
 | `searches` | One row per search: user_id, service, location, deep, radius_km, total_results, created_at |
 | `leads` | Scraped leads linked to their search; unique `(search_id, place_id)`; `outreach_status` column (new/contacted/interested/passed) added Jul 13 for the Leads library |
+| `campaigns` | Named outreach lists: user_id, name, description, created_at (added Jul 13) |
+| `campaign_leads` | Join table campaign ↔ lead by `place_id`; PK `(campaign_id, place_id)` (added Jul 13) |
 
 - Both have **RLS enabled** with owner-only select/insert/delete policies (`auth.uid() = user_id`).
 - Backend writes with the service key (bypasses RLS) but always scopes queries by `user_id` explicitly (`app/services/history.py`).
@@ -207,7 +209,8 @@ cd frontend && railway up . --path-as-root --service frontend --detach
 - [x] Dashboard KPIs wired to real data ✅ built
 - [x] Frontend UI to reopen a saved search's leads ✅ built — click a recent-searches row → opens Search tab, loads saved leads via `GET /history/{id}/leads` (filters + CSV/Excel export all work on the loaded set)
 - [x] **Leads tab** ✅ built (Jul 13) — master lead library: dedupes all leads by `place_id` (`times_seen` counts repeats), shows which search found each lead, text/status/website filters, per-lead **outreach status** dropdown (new/contacted/interested/passed — persisted via `outreach_status` column on `leads`, optimistic UI), CSV export of filtered set
-- [ ] Campaigns / Exports tabs
+- [x] **Campaigns tab** ✅ built (Jul 13) — named outreach lists built from the lead library. Backend: `GET/POST /campaigns`, `DELETE /campaigns/{id}`, `GET/POST /campaigns/{id}/leads`, `DELETE /campaigns/{id}/leads/{place_id}` (`app/services/campaigns.py`). List view shows per-campaign lead count, % worked progress bar, and interested count; detail view is a lead table with status dropdowns (shared with library), remove-from-campaign, and CSV export. Leads page gained checkbox selection + a bulk "Add to campaign…" picker (with inline "+ New campaign"). Deleting a campaign keeps leads in the library.
+- [x] **Exports tab** — dropped (Jul 13); redundant with per-page CSV/Excel on Search, Leads, and Campaigns. Excel export added to Leads + Campaigns to match Search.
 - [ ] Multi-service batch search in web UI
 - [ ] Phone-present filter
 - [ ] Deep search progress streaming / background jobs

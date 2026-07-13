@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { DownloadIcon, SearchIcon, UsersIcon } from "@/components/icons";
+import { DownloadIcon, SearchIcon, TargetIcon, UsersIcon } from "@/components/icons";
 import {
+  addLeadsToCampaign,
+  createCampaign,
+  exportXlsx,
+  listCampaigns,
   listLibraryLeads,
   setLeadStatus,
+  type Campaign,
   type LibraryLead,
   type OutreachStatus,
 } from "@/lib/api/leads";
@@ -31,6 +36,12 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [website, setWebsite] = useState<WebsiteFilter>("any");
 
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     listLibraryLeads()
@@ -39,6 +50,13 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
       })
       .catch(() => {
         if (!cancelled) setError("Couldn't load your leads.");
+      });
+    listCampaigns()
+      .then((rows) => {
+        if (!cancelled) setCampaigns(rows);
+      })
+      .catch(() => {
+        // Non-critical — the add-to-campaign picker just stays empty.
       });
     return () => {
       cancelled = true;
@@ -97,6 +115,75 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
     );
   };
 
+  const doXlsx = async () => {
+    if (!filtered.length) return;
+    setExporting(true);
+    try {
+      const blob = await exportXlsx("Lead library", "All markets", filtered);
+      downloadBlob(blob, "leadflow_leads.xlsx");
+    } catch {
+      setError("Excel export failed.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const toggleSelected = (placeId: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(placeId)) {
+        next.delete(placeId);
+      } else {
+        next.add(placeId);
+      }
+      return next;
+    });
+  };
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((l) => selected.has(l.place_id));
+
+  const toggleAllFiltered = () => {
+    setSelected((prev) => {
+      if (allFilteredSelected) {
+        const next = new Set(prev);
+        filtered.forEach((l) => next.delete(l.place_id));
+        return next;
+      }
+      return new Set([...prev, ...filtered.map((l) => l.place_id)]);
+    });
+  };
+
+  const addToCampaign = async (campaignId: string) => {
+    if (!selected.size || adding) return;
+    setAdding(true);
+    setError(null);
+    try {
+      let targetId = campaignId;
+      let targetName = campaigns.find((c) => c.id === campaignId)?.name ?? "";
+      if (campaignId === "__new__") {
+        const name = window.prompt("Name for the new campaign:");
+        if (!name?.trim()) {
+          setAdding(false);
+          return;
+        }
+        const created = await createCampaign(name.trim());
+        setCampaigns((prev) => [created, ...prev]);
+        targetId = created.id;
+        targetName = created.name;
+      }
+      await addLeadsToCampaign(targetId, [...selected]);
+      setNotice(
+        `Added ${selected.size} lead${selected.size === 1 ? "" : "s"} to "${targetName}".`,
+      );
+      setSelected(new Set());
+    } catch {
+      setError("Couldn't add leads to the campaign.");
+    } finally {
+      setAdding(false);
+    }
+  };
+
   const filtersActive = query.trim() !== "" || statusFilter !== "all" || website !== "any";
   const loading = leads === null && !error;
 
@@ -105,6 +192,20 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
       {error && (
         <div className="alert alert--error" role="alert">
           {error}
+        </div>
+      )}
+
+      {notice && (
+        <div className="alert alert--success" role="status">
+          {notice}
+          <button
+            type="button"
+            className="alert__dismiss"
+            onClick={() => setNotice(null)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -158,6 +259,15 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
               >
                 <DownloadIcon aria-hidden="true" />
                 CSV
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => void doXlsx()}
+                disabled={!filtered.length || exporting}
+              >
+                <DownloadIcon aria-hidden="true" />
+                {exporting ? "Exporting…" : "Excel"}
               </button>
             </div>
           </div>
@@ -224,6 +334,42 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
             )}
           </div>
 
+          {selected.size > 0 && (
+            <div className="bulk-bar">
+              <span className="bulk-bar__count">
+                <TargetIcon aria-hidden="true" />
+                {selected.size} selected
+              </span>
+              <select
+                className="filter-select"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) void addToCampaign(e.target.value);
+                  e.target.value = "";
+                }}
+                disabled={adding}
+                aria-label="Add selected leads to a campaign"
+              >
+                <option value="" disabled>
+                  {adding ? "Adding…" : "Add to campaign…"}
+                </option>
+                {campaigns.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+                <option value="__new__">+ New campaign</option>
+              </select>
+              <button
+                type="button"
+                className="filter-bar__reset"
+                onClick={() => setSelected(new Set())}
+              >
+                Clear selection
+              </button>
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div className="empty-state">
               <h3 className="empty-state__title">No leads match your filters</h3>
@@ -236,6 +382,14 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
               <table className="lead-table">
                 <thead>
                   <tr>
+                    <th className="lead-table__check">
+                      <input
+                        type="checkbox"
+                        checked={allFilteredSelected}
+                        onChange={toggleAllFiltered}
+                        aria-label="Select all filtered leads"
+                      />
+                    </th>
                     <th>Business</th>
                     <th>Found via</th>
                     <th>Phone</th>
@@ -248,6 +402,14 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
                 <tbody>
                   {filtered.map((l) => (
                     <tr key={l.place_id}>
+                      <td className="lead-table__check">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(l.place_id)}
+                          onChange={() => toggleSelected(l.place_id)}
+                          aria-label={`Select ${l.name}`}
+                        />
+                      </td>
                       <td>
                         <a
                           href={l.maps_uri}

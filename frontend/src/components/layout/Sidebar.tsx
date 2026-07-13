@@ -2,7 +2,6 @@ import type { ComponentType, SVGProps } from "react";
 
 import {
   DashboardIcon,
-  DownloadIcon,
   LogOutIcon,
   PanelToggleIcon,
   SearchIcon,
@@ -10,7 +9,7 @@ import {
   UsersIcon,
 } from "@/components/icons";
 
-export type Tab = "dashboard" | "search" | "leads";
+export type Tab = "dashboard" | "search" | "leads" | "campaigns";
 
 type NavEntry = {
   id: Tab;
@@ -22,12 +21,7 @@ const NAV: NavEntry[] = [
   { id: "dashboard", label: "Dashboard", Icon: DashboardIcon },
   { id: "search", label: "Search", Icon: SearchIcon },
   { id: "leads", label: "Leads", Icon: UsersIcon },
-];
-
-// Forward-looking items shown as "soon" to signal product direction.
-const NAV_SOON: { label: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
-  { label: "Campaigns", Icon: TargetIcon },
-  { label: "Exports", Icon: DownloadIcon },
+  { id: "campaigns", label: "Campaigns", Icon: TargetIcon },
 ];
 
 interface SidebarProps {
@@ -84,23 +78,6 @@ export function Sidebar({
           </button>
         ))}
 
-        {NAV_SOON.map(({ label, Icon }) => (
-          <button
-            key={label}
-            type="button"
-            className="nav-item"
-            disabled
-            title={collapsed ? `${label} (coming soon)` : undefined}
-          >
-            <Icon className="nav-item__icon" aria-hidden="true" />
-            {!collapsed && (
-              <>
-                <span>{label}</span>
-                <span className="nav-item__soon">Soon</span>
-              </>
-            )}
-          </button>
-        ))}
       </nav>
 
       <div className="sidebar__footer">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { AuthModal } from "@/components/auth/AuthModal";
+import { CampaignsPage } from "@/components/campaigns/CampaignsPage";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { LeadsPage } from "@/components/leads/LeadsPage";
 import { SearchPage, type SavedSearchRef } from "@/components/search/SearchPage";
@@ -22,6 +23,10 @@ const TAB_META: Record<Tab, { title: string; subtitle: string }> = {
   leads: {
     title: "Leads",
     subtitle: "Every business you've found, deduplicated across searches.",
+  },
+  campaigns: {
+    title: "Campaigns",
+    subtitle: "Group leads into outreach lists and track progress.",
   },
 };
 
@@ -139,6 +144,9 @@ export function AppLayout() {
           )}
           {tab === "search" && <SearchPage savedSearch={savedSearch} />}
           {tab === "leads" && <LeadsPage onNewSearch={goToSearch} />}
+          {tab === "campaigns" && (
+            <CampaignsPage onGoToLeads={() => setTab("leads")} />
+          )}
         </div>
       </div>
     </div>

@@ -56,6 +56,8 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 | GET | `/history` | Yes | Recent searches (newest first) |
 | GET | `/history/stats` | Yes | Dashboard KPIs (leads, searches, markets) |
 | GET | `/history/{id}/leads` | Yes | Leads from a saved search |
+| GET | `/leads` | Yes | Master lead library — deduped by place_id across all searches |
+| PATCH | `/leads/{place_id}/status` | Yes | Set outreach status (new/contacted/interested/passed) |
 
 **Search params:** `service`, `location`, `deep`, `max_results`, `radius_km` (1–80 km).
 
@@ -91,7 +93,7 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 | Table | Purpose |
 |---|---|
 | `searches` | One row per search: user_id, service, location, deep, radius_km, total_results, created_at |
-| `leads` | Scraped leads linked to their search; unique `(search_id, place_id)` |
+| `leads` | Scraped leads linked to their search; unique `(search_id, place_id)`; `outreach_status` column (new/contacted/interested/passed) added Jul 13 for the Leads library |
 
 - Both have **RLS enabled** with owner-only select/insert/delete policies (`auth.uid() = user_id`).
 - Backend writes with the service key (bypasses RLS) but always scopes queries by `user_id` explicitly (`app/services/history.py`).
@@ -204,7 +206,8 @@ cd frontend && railway up . --path-as-root --service frontend --detach
 - [x] Saved searches / lead history per user (Supabase tables + RLS) ✅ built
 - [x] Dashboard KPIs wired to real data ✅ built
 - [x] Frontend UI to reopen a saved search's leads ✅ built — click a recent-searches row → opens Search tab, loads saved leads via `GET /history/{id}/leads` (filters + CSV/Excel export all work on the loaded set)
-- [ ] Leads / Campaigns / Exports tabs
+- [x] **Leads tab** ✅ built (Jul 13) — master lead library: dedupes all leads by `place_id` (`times_seen` counts repeats), shows which search found each lead, text/status/website filters, per-lead **outreach status** dropdown (new/contacted/interested/passed — persisted via `outreach_status` column on `leads`, optimistic UI), CSV export of filtered set
+- [ ] Campaigns / Exports tabs
 - [ ] Multi-service batch search in web UI
 - [ ] Phone-present filter
 - [ ] Deep search progress streaming / background jobs

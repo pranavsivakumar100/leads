@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
-from app.api.routes import health, history, me, search
+from app.api.routes import health, history, leads, me, search
 
 api_router = APIRouter()
 api_router.include_router(health.router)
 api_router.include_router(me.router)
 api_router.include_router(search.router)
 api_router.include_router(history.router)
+api_router.include_router(leads.router)

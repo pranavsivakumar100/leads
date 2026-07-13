@@ -10,7 +10,7 @@ import {
   UsersIcon,
 } from "@/components/icons";
 
-export type Tab = "dashboard" | "search";
+export type Tab = "dashboard" | "search" | "leads";
 
 type NavEntry = {
   id: Tab;
@@ -21,11 +21,11 @@ type NavEntry = {
 const NAV: NavEntry[] = [
   { id: "dashboard", label: "Dashboard", Icon: DashboardIcon },
   { id: "search", label: "Search", Icon: SearchIcon },
+  { id: "leads", label: "Leads", Icon: UsersIcon },
 ];
 
 // Forward-looking items shown as "soon" to signal product direction.
 const NAV_SOON: { label: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
-  { label: "Leads", Icon: UsersIcon },
   { label: "Campaigns", Icon: TargetIcon },
   { label: "Exports", Icon: DownloadIcon },
 ];

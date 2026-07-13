@@ -48,6 +48,29 @@ class DashboardStats(BaseModel):
     avg_leads_per_search: float = 0.0
 
 
+class LibraryLead(BaseModel):
+    place_id: str
+    name: str
+    phone: str = ""
+    website: str = ""
+    address: str = ""
+    rating: float | None = None
+    reviews: int = 0
+    score: float = 0.0
+    has_website: bool = False
+    status: str = ""
+    maps_uri: str = ""
+    outreach_status: str = "new"
+    service: str = ""
+    location: str = ""
+    times_seen: int = 1
+    created_at: str = ""
+
+
+class OutreachStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(new|contacted|interested|passed)$")
+
+
 class LeadExportRequest(BaseModel):
     service: str
     location: str

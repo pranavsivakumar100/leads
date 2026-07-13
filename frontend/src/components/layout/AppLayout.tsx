@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { AuthModal } from "@/components/auth/AuthModal";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
+import { LeadsPage } from "@/components/leads/LeadsPage";
 import { SearchPage, type SavedSearchRef } from "@/components/search/SearchPage";
 import { CheckIcon, TargetIcon } from "@/components/icons";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +18,10 @@ const TAB_META: Record<Tab, { title: string; subtitle: string }> = {
   search: {
     title: "Search",
     subtitle: "Pull ranked local business leads by service and city.",
+  },
+  leads: {
+    title: "Leads",
+    subtitle: "Every business you've found, deduplicated across searches.",
   },
 };
 
@@ -126,14 +131,14 @@ export function AppLayout() {
       <div className="app-main">
         <TopBar title={meta.title} subtitle={meta.subtitle} onNewSearch={goToSearch} />
         <div className="app-content">
-          {tab === "dashboard" ? (
+          {tab === "dashboard" && (
             <DashboardPage
               onNewSearch={goToSearch}
               onOpenSearch={openSavedSearch}
             />
-          ) : (
-            <SearchPage savedSearch={savedSearch} />
           )}
+          {tab === "search" && <SearchPage savedSearch={savedSearch} />}
+          {tab === "leads" && <LeadsPage onNewSearch={goToSearch} />}
         </div>
       </div>
     </div>

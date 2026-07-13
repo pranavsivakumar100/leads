@@ -82,6 +82,30 @@ export function getSavedLeads(searchId: string): Promise<Lead[]> {
   return apiFetch<Lead[]>(`/history/${searchId}/leads`);
 }
 
+export type OutreachStatus = "new" | "contacted" | "interested" | "passed";
+
+export interface LibraryLead extends Lead {
+  outreach_status: OutreachStatus;
+  service: string;
+  location: string;
+  times_seen: number;
+  created_at: string;
+}
+
+export function listLibraryLeads(): Promise<LibraryLead[]> {
+  return apiFetch<LibraryLead[]>("/leads");
+}
+
+export function setLeadStatus(
+  placeId: string,
+  status: OutreachStatus,
+): Promise<void> {
+  return apiFetch<void>(`/leads/${encodeURIComponent(placeId)}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
 export function runSearch(params: LeadSearchParams): Promise<LeadSearchResponse> {
   return apiFetch<LeadSearchResponse>("/search", {
     method: "POST",

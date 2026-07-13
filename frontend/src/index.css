@@ -925,6 +925,53 @@ body {
   width: 74px;
 }
 
+.filter-bar__group--grow {
+  flex: 1;
+  min-width: 180px;
+}
+
+.filter-input--search {
+  width: 100%;
+  max-width: 320px;
+}
+
+/* Outreach status dropdown (Leads library) */
+.status-select {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.status-select--contacted {
+  background: #eff8ff;
+  border-color: #b2ddff;
+  color: #175cd3;
+}
+
+.status-select--interested {
+  background: var(--accent-soft);
+  border-color: #b7e4d0;
+  color: var(--accent-hover);
+}
+
+.status-select--passed {
+  background: var(--surface-muted);
+  color: var(--text-subtle);
+}
+
 .filter-select:focus,
 .filter-input:focus {
   outline: none;

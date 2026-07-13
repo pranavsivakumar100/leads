@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { CloseIcon, FileTextIcon, PlusIcon, TrashIcon } from "@/components/icons";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CloseIcon,
+  FileTextIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@/components/icons";
 import {
   createScript,
   deleteScript,
@@ -284,7 +291,7 @@ function ScriptEditor({
                     aria-label="Move step up"
                     title="Move up"
                   >
-                    ↑
+                    <ChevronUpIcon aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -294,7 +301,7 @@ function ScriptEditor({
                     aria-label="Move step down"
                     title="Move down"
                   >
-                    ↓
+                    <ChevronDownIcon aria-hidden="true" />
                   </button>
                   <button
                     type="button"

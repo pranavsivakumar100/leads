@@ -1,12 +1,12 @@
 import type { ComponentType, SVGProps } from "react";
 
 import {
+  BookIcon,
   DashboardIcon,
   LogOutIcon,
   PanelToggleIcon,
   PhoneIcon,
   SearchIcon,
-  SparklesIcon,
   TargetIcon,
   UsersIcon,
 } from "@/components/icons";
@@ -31,7 +31,7 @@ const NAV: NavEntry[] = [
   { id: "leads", label: "Leads", Icon: UsersIcon },
   { id: "campaigns", label: "Campaigns", Icon: TargetIcon },
   { id: "sessions", label: "Sessions", Icon: PhoneIcon },
-  { id: "skills", label: "Skills", Icon: SparklesIcon },
+  { id: "skills", label: "Skills", Icon: BookIcon },
 ];
 
 interface SidebarProps {

@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+
+# Local lead-data / scratch (not part of the app)
+stuff/
+
+# Safety nets (subdir .gitignores also cover these)
+**/.env
+**/node_modules/
+**/.venv/
+**/dist/
+**/__pycache__/
+*.log

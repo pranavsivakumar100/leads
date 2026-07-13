@@ -1,0 +1,47 @@
+from pydantic import BaseModel, Field
+
+
+class LeadSearchRequest(BaseModel):
+    service: str = Field(..., description="Preset label (e.g. 'HVAC') or a raw query.")
+    location: str = Field(..., description="City / area, e.g. 'Newark NJ'.")
+    deep: bool = Field(True, description="Tile a grid for deeper coverage (slower).")
+    max_results: int = Field(300, ge=1, le=500)
+    radius_km: float = Field(15.0, ge=1.0, le=80.0, description="Search radius from center.")
+
+
+class Lead(BaseModel):
+    name: str
+    phone: str = ""
+    website: str = ""
+    address: str = ""
+    rating: float | None = None
+    reviews: int = 0
+    score: float = 0.0
+    has_website: bool = False
+    status: str = ""
+    maps_uri: str = ""
+
+
+class LeadSearchResponse(BaseModel):
+    service: str
+    location: str
+    total: int
+    leads: list[Lead]
+
+
+class LeadExportRequest(BaseModel):
+    service: str
+    location: str
+    leads: list[Lead]
+
+
+class ServicePreset(BaseModel):
+    label: str
+    query: str
+
+
+class LocationSuggestion(BaseModel):
+    place_id: str
+    label: str
+    main_text: str = ""
+    secondary_text: str = ""

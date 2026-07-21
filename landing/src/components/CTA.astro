@@ -1,0 +1,68 @@
+---
+import { APP_URL } from "../consts";
+---
+
+<section class="section cta">
+  <div class="container">
+    <div class="cta__card">
+      <h2 class="cta__title">Your next 100 leads are one search away.</h2>
+      <p class="cta__lede">
+        Pick a service, pick a city, and let Leadflow build the ranked call list —
+        then coach you through closing it.
+      </p>
+      <div class="cta__actions">
+        <a class="btn btn--on-dark btn--lg" href={APP_URL}>Start finding leads</a>
+        <a class="btn btn--ghost btn--lg cta__ghost" href="#pricing">See pricing</a>
+      </div>
+      <p class="cta__note">Free to start · No credit card required</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta__card {
+    background:
+      radial-gradient(70% 120% at 20% 0%, rgba(99, 180, 137, 0.18), transparent 60%),
+      var(--dark);
+    border-radius: var(--radius-xl);
+    padding: 72px 40px;
+    text-align: center;
+  }
+
+  .cta__title {
+    color: var(--dark-text);
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
+    max-width: 18ch;
+    margin: 0 auto;
+  }
+
+  .cta__lede {
+    margin: 18px auto 32px;
+    max-width: 48ch;
+    color: var(--dark-text-muted);
+    font-size: 1.08rem;
+    line-height: 1.6;
+  }
+
+  .cta__actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cta__ghost {
+    color: var(--dark-text);
+  }
+
+  .cta__ghost:hover {
+    color: #8fcb9b;
+  }
+
+  .cta__note {
+    margin: 20px 0 0;
+    font-size: 0.85rem;
+    color: var(--dark-text-muted);
+  }
+</style>

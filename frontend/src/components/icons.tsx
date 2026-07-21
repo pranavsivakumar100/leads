@@ -19,6 +19,38 @@ function Svg({ children, ...props }: IconProps) {
   );
 }
 
+/** Radiating-spoke asterisk brand mark, in the spirit of the Claude starburst. */
+export const SparkIcon = (p: IconProps) => (
+  <Svg {...p} strokeWidth={2.4}>
+    <path d="M12 3.5v5" />
+    <path d="M12 15.5v5" />
+    <path d="M4.64 7.75l4.33 2.5" />
+    <path d="M15.03 13.75l4.33 2.5" />
+    <path d="M4.64 16.25l4.33-2.5" />
+    <path d="M15.03 10.25l4.33-2.5" />
+  </Svg>
+);
+
+export const SunIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2" />
+    <path d="M12 20v2" />
+    <path d="m4.93 4.93 1.41 1.41" />
+    <path d="m17.66 17.66 1.41 1.41" />
+    <path d="M2 12h2" />
+    <path d="M20 12h2" />
+    <path d="m6.34 17.66-1.41 1.41" />
+    <path d="m19.07 4.93-1.41 1.41" />
+  </Svg>
+);
+
+export const MoonIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+  </Svg>
+);
+
 export const DashboardIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="3" y="3" width="7" height="9" rx="1.5" />

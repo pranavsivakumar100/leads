@@ -1,0 +1,108 @@
+---
+import { APP_URL, SITE_NAME } from "../consts";
+import BrandMark from "./BrandMark.astro";
+
+const nav = [
+  { label: "Features", href: "#features" },
+  { label: "How it works", href: "#how" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "FAQ", href: "#faq" },
+];
+---
+
+<header class="header">
+  <div class="container header__inner">
+    <a class="header__brand" href="/" aria-label={`${SITE_NAME} home`}>
+      <BrandMark size={22} />
+      <span class="header__wordmark">{SITE_NAME}</span>
+    </a>
+
+    <nav class="header__nav" aria-label="Primary">
+      {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+
+    <div class="header__actions">
+      <a class="header__signin" href={APP_URL}>Sign in</a>
+      <a class="btn btn--primary" href={APP_URL}>Get started</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    height: 66px;
+  }
+
+  .header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .header__wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .header__nav {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-left: auto;
+    margin-right: 8px;
+  }
+
+  .header__nav a {
+    font-size: 0.94rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.15s ease;
+  }
+
+  .header__nav a:hover {
+    color: var(--text);
+  }
+
+  .header__actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header__signin {
+    font-size: 0.94rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .header__signin:hover {
+    color: var(--accent-text);
+  }
+
+  @media (max-width: 880px) {
+    .header__nav {
+      display: none;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .header__signin {
+      display: none;
+    }
+  }
+</style>

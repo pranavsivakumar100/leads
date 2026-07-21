@@ -1,0 +1,110 @@
+---
+const steps = [
+  {
+    n: "01",
+    title: "Search a service + city",
+    body: "Type “roofing in Austin” and choose your coverage. Leadflow sweeps Google Maps and returns every matching business in seconds.",
+  },
+  {
+    n: "02",
+    title: "Review the ranked list",
+    body: "Leads arrive scored by review quality and offer fit. Filter, sort, and add the best ones to a campaign — or export straight to CSV.",
+  },
+  {
+    n: "03",
+    title: "Call with an AI coach",
+    body: "Open a call session and Leadflow follows your script, transcribes live, and suggests your next line the moment the prospect pushes back.",
+  },
+  {
+    n: "04",
+    title: "Track and close",
+    body: "Log outcomes, watch campaign progress, and keep every lead's status in one library so nothing slips and follow-ups happen on time.",
+  },
+];
+---
+
+<section class="section steps" id="how">
+  <div class="container">
+    <div class="section__head">
+      <span class="eyebrow">How it works</span>
+      <h2 class="section__title">Four steps from search to sale</h2>
+    </div>
+
+    <ol class="steps__list">
+      {
+        steps.map((s) => (
+          <li class="step">
+            <span class="step__n">{s.n}</span>
+            <div>
+              <h3 class="step__title">{s.title}</h3>
+              <p class="step__body">{s.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .steps {
+    background: var(--surface-muted);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .steps__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    counter-reset: step;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .step__n {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent-text);
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+
+  .step__title {
+    font-size: 1.14rem;
+    margin-bottom: 6px;
+  }
+
+  .step__body {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 900px) {
+    .steps__list {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .steps__list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

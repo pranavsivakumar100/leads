@@ -1,0 +1,137 @@
+---
+const features = [
+  {
+    title: "Find every business, fast",
+    body: "Search any service in any city and pull the full list from Google Maps — with phone numbers, websites, and addresses. Deep mode sweeps a whole metro so you never miss a block.",
+    icon: "search",
+  },
+  {
+    title: "Ranked by review quality",
+    body: "Every lead is scored on rating, review volume, and recency, so the businesses most worth your time rise to the top instead of getting buried.",
+    icon: "chart",
+  },
+  {
+    title: "Offer-fit scoring",
+    body: "Tell Leadflow what you sell and each lead gets a strong / medium / low fit rating with a reason — so you call the prospects most likely to say yes.",
+    icon: "target",
+  },
+  {
+    title: "One dedup'd lead library",
+    body: "Results flow into a single deduplicated library with outreach status tracking, filters, and bulk actions. No more messy spreadsheets or double-dialing.",
+    icon: "layers",
+  },
+  {
+    title: "Campaigns that track progress",
+    body: "Group leads into outbound campaigns and watch percent-worked and interested counts climb as your team dials through the list.",
+    icon: "flag",
+  },
+  {
+    title: "Live AI call coaching",
+    body: "Start a call session and Leadflow listens, suggests the next line in real time, and follows your script — turning average reps into your best closer.",
+    icon: "mic",
+  },
+];
+
+const icons: Record<string, string> = {
+  search:
+    '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  chart:
+    '<path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>',
+  target:
+    '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
+  layers:
+    '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+  flag:
+    '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1Z"/><path d="M4 22V4"/>',
+  mic:
+    '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',
+};
+---
+
+<section class="section" id="features">
+  <div class="container">
+    <div class="section__head">
+      <span class="eyebrow">Everything in one place</span>
+      <h2 class="section__title">From cold list to booked meeting</h2>
+      <p class="section__lede">
+        Leadflow replaces the scraper, the spreadsheet, the CRM tab, and the
+        call script with one focused workflow built for outbound.
+      </p>
+    </div>
+
+    <div class="grid">
+      {
+        features.map((f) => (
+          <article class="card">
+            <span class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={icons[f.icon]} />
+            </span>
+            <h3 class="card__title">{f.title}</h3>
+            <p class="card__body">{f.body}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px 24px;
+    transition: border-color 0.18s ease, transform 0.18s ease;
+  }
+
+  .card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+
+  .card__icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    margin-bottom: 16px;
+  }
+
+  .card__icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .card__title {
+    font-size: 1.18rem;
+    margin-bottom: 8px;
+  }
+
+  .card__body {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.96rem;
+    line-height: 1.58;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

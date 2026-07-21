@@ -1,0 +1,303 @@
+---
+import { APP_URL } from "../consts";
+
+const rows = [
+  { name: "Summit Roofing Co.", city: "Austin, TX", score: 92, fit: "Strong" },
+  { name: "Bluebonnet HVAC", city: "Austin, TX", score: 88, fit: "Strong" },
+  { name: "Lone Star Plumbing", city: "Round Rock, TX", score: 81, fit: "Medium" },
+  { name: "Hillside Landscaping", city: "Cedar Park, TX", score: 76, fit: "Medium" },
+  { name: "Capital Electric", city: "Austin, TX", score: 63, fit: "Low" },
+];
+---
+
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <span class="eyebrow">Lead gen + AI call coaching</span>
+      <h1 class="hero__title">
+        Local business leads,<br />ranked and ready to call.
+      </h1>
+      <p class="hero__lede">
+        Search any service in any city. Leadflow pulls every business from Google
+        Maps, scores them by review quality and offer fit, then coaches you
+        through the call — so your list turns into booked meetings.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary btn--lg" href={APP_URL}>
+          Start finding leads
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a class="btn btn--secondary btn--lg" href="#how">See how it works</a>
+      </div>
+      <p class="hero__note">No credit card required · Export to CSV or Excel in one click</p>
+    </div>
+
+    <div class="hero__preview" aria-hidden="true">
+      <div class="mock">
+        <div class="mock__bar">
+          <span class="mock__dot"></span>
+          <span class="mock__dot"></span>
+          <span class="mock__dot"></span>
+          <span class="mock__addr">app.leadflow — roofing in Austin, TX</span>
+        </div>
+        <div class="mock__body">
+          <div class="mock__head">
+            <div>
+              <div class="mock__title">128 leads found</div>
+              <div class="mock__sub">Scored by review quality · deep metro coverage</div>
+            </div>
+            <span class="mock__pill">Export</span>
+          </div>
+          <table class="mock__table">
+            <thead>
+              <tr><th>Business</th><th>Location</th><th class="r">Score</th><th class="r">Fit</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr>
+                  <td class="mock__name">{r.name}</td>
+                  <td class="mock__city">{r.city}</td>
+                  <td class="r mock__score">{r.score}</td>
+                  <td class="r"><span class={`mock__fit mock__fit--${r.fit.toLowerCase()}`}>{r.fit}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="coach">
+        <div class="coach__label">AI coach</div>
+        <p class="coach__text">“They mentioned they're busy — acknowledge it, then ask one question about their current roofing lead flow.”</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 72px 0 88px;
+    background:
+      radial-gradient(60% 50% at 85% 0%, var(--accent-soft), transparent 70%),
+      var(--bg);
+  }
+
+  .hero__inner {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 56px;
+  }
+
+  .hero__title {
+    margin-top: 18px;
+    font-size: clamp(2.4rem, 5vw, 3.5rem);
+    line-height: 1.06;
+  }
+
+  .hero__lede {
+    margin: 22px 0 0;
+    max-width: 46ch;
+    color: var(--text-muted);
+    font-size: 1.12rem;
+    line-height: 1.62;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .hero__note {
+    margin: 18px 0 0;
+    font-size: 0.86rem;
+    color: var(--text-subtle);
+  }
+
+  /* Product mockup */
+  .hero__preview {
+    position: relative;
+  }
+
+  .mock {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .mock__bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 14px;
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mock__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+
+  .mock__addr {
+    margin-left: 10px;
+    font-size: 0.74rem;
+    color: var(--text-subtle);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mock__body {
+    padding: 18px;
+  }
+
+  .mock__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .mock__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+  }
+
+  .mock__sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .mock__pill {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--accent-contrast);
+    background: var(--accent);
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+
+  .mock__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .mock__table th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mock__table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mock__table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .mock__table .r {
+    text-align: right;
+  }
+
+  .mock__name {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .mock__city {
+    color: var(--text-subtle);
+  }
+
+  .mock__score {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mock__fit {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 999px;
+  }
+
+  .mock__fit--strong {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+
+  .mock__fit--medium {
+    background: #faf3e4;
+    color: #8a6116;
+  }
+
+  .mock__fit--low {
+    background: var(--surface-sunken);
+    color: var(--text-subtle);
+  }
+
+  .coach {
+    position: absolute;
+    left: -22px;
+    bottom: -30px;
+    width: 270px;
+    background: var(--dark);
+    color: var(--dark-text);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .coach__label {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8fcb9b;
+    margin-bottom: 6px;
+  }
+
+  .coach__text {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 0.96rem;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 940px) {
+    .hero__inner {
+      grid-template-columns: 1fr;
+      gap: 64px;
+    }
+    .coach {
+      left: auto;
+      right: 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .coach {
+      position: static;
+      width: 100%;
+      margin-top: 16px;
+    }
+    .mock__addr {
+      display: none;
+    }
+  }
+</style>

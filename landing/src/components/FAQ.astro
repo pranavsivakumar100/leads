@@ -1,0 +1,111 @@
+---
+const faqs = [
+  {
+    q: "Where do the leads come from?",
+    a: "Leadflow pulls business listings from Google Maps for whatever service and location you search — including phone numbers, websites, ratings, and review counts. Deep search sweeps a whole metro area grid so you capture businesses a single search would miss.",
+  },
+  {
+    q: "How does lead scoring work?",
+    a: "Every lead gets a score based on rating, review volume, and how recent the reviews are — a proxy for how established and reachable the business is. Add an offer and each lead also gets a strong / medium / low fit rating with a short reason.",
+  },
+  {
+    q: "What is the AI call coach?",
+    a: "When you start a call session, Leadflow transcribes the conversation live and suggests your next line in real time, following your own scripts and offers. Notes and outcomes are saved back to the lead automatically.",
+  },
+  {
+    q: "Can I export my leads?",
+    a: "Yes — every list exports to CSV or Excel in one click, so you can drop leads into any dialer, CRM, or spreadsheet you already use.",
+  },
+  {
+    q: "Do I need a credit card to start?",
+    a: "No. The Starter plan is free and doesn't require a card. Upgrade to Pro or Team whenever you're ready for unlimited leads and AI coaching.",
+  },
+];
+---
+
+<section class="section faq" id="faq">
+  <div class="container faq__inner">
+    <div class="section__head faq__head">
+      <span class="eyebrow">FAQ</span>
+      <h2 class="section__title">Questions, answered</h2>
+    </div>
+
+    <div class="faq__list">
+      {
+        faqs.map((f) => (
+          <details class="faq__item">
+            <summary class="faq__q">
+              <span>{f.q}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <p class="faq__a">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq__inner {
+    max-width: 760px;
+  }
+
+  .faq__head {
+    margin-bottom: 40px;
+  }
+
+  .faq__list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .faq__item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 20px;
+  }
+
+  .faq__item[open] {
+    border-color: var(--border-strong);
+  }
+
+  .faq__q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 1.08rem;
+    font-weight: 600;
+    list-style: none;
+  }
+
+  .faq__q::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__q svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .faq__item[open] .faq__q svg {
+    transform: rotate(180deg);
+  }
+
+  .faq__a {
+    margin: 0;
+    padding: 0 0 18px;
+    color: var(--text-muted);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    max-width: 62ch;
+  }
+</style>

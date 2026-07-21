@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#faf9f5"/>
+  <circle cx="1050" cy="90" r="360" fill="#e5efe7"/>
+  <g transform="translate(90, 120)">
+    <g stroke="#2f6a4a" stroke-width="6" stroke-linecap="round">
+      <path d="M22 4v18"/>
+      <path d="M22 42v18"/>
+      <path d="M4 15l16 9"/>
+      <path d="M24 39l16 9"/>
+      <path d="M4 49l16-9"/>
+      <path d="M24 25l16-9"/>
+    </g>
+    <text x="58" y="48" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="600" fill="#141413">Leadflow</text>
+  </g>
+  <text x="90" y="330" font-family="Georgia, 'Times New Roman', serif" font-size="82" font-weight="600" fill="#141413">Local business leads,</text>
+  <text x="90" y="420" font-family="Georgia, 'Times New Roman', serif" font-size="82" font-weight="600" fill="#141413">ranked and ready to call.</text>
+  <text x="90" y="500" font-family="'Helvetica Neue', Arial, sans-serif" font-size="34" fill="#5e5d59">Find leads on Google Maps, score them, and close with AI call coaching.</text>
+  <rect x="90" y="540" width="290" height="60" rx="12" fill="#2f6a4a"/>
+  <text x="235" y="579" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="500" fill="#ffffff">Start finding leads</text>
+</svg>

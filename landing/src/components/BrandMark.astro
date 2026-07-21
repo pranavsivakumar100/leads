@@ -1,0 +1,25 @@
+---
+interface Props {
+  size?: number;
+  color?: string;
+}
+const { size = 22, color = "var(--accent)" } = Astro.props;
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke={color}
+  stroke-width="2.4"
+  stroke-linecap="round"
+  aria-hidden="true"
+>
+  <path d="M12 3.5v5" />
+  <path d="M12 15.5v5" />
+  <path d="M4.64 7.75l4.33 2.5" />
+  <path d="M15.03 13.75l4.33 2.5" />
+  <path d="M4.64 16.25l4.33-2.5" />
+  <path d="M15.03 10.25l4.33-2.5" />
+</svg>

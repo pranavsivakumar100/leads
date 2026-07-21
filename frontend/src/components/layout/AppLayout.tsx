@@ -7,38 +7,11 @@ import { LeadsPage } from "@/components/leads/LeadsPage";
 import { SearchPage, type SavedSearchRef } from "@/components/search/SearchPage";
 import { SkillsPage } from "@/components/skills/SkillsPage";
 import { SessionsPage } from "@/components/sessions/SessionsPage";
-import { CheckIcon, TargetIcon } from "@/components/icons";
+import { CheckIcon, SparkIcon } from "@/components/icons";
+import { config } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
 
 import { Sidebar, type Tab } from "./Sidebar";
-import { TopBar } from "./TopBar";
-
-const TAB_META: Record<Tab, { title: string; subtitle: string }> = {
-  dashboard: {
-    title: "Dashboard",
-    subtitle: "Your lead generation at a glance.",
-  },
-  search: {
-    title: "Search",
-    subtitle: "Pull ranked local business leads by service and city.",
-  },
-  leads: {
-    title: "Leads",
-    subtitle: "Every business you've found, deduplicated across searches.",
-  },
-  campaigns: {
-    title: "Campaigns",
-    subtitle: "Group leads into outreach lists and track progress.",
-  },
-  sessions: {
-    title: "Sessions",
-    subtitle: "Your call history — outcomes, notes, and coaching transcripts.",
-  },
-  skills: {
-    title: "Skills",
-    subtitle: "Your scripts and offers — what you sell and how you pitch it.",
-  },
-};
 
 export function AppLayout() {
   const { session, loading, signOut } = useAuth();
@@ -61,12 +34,12 @@ export function AppLayout() {
         <div className="gate">
           <div className="gate__inner">
             <section className="gate__intro">
-              <div className="gate__brand">
+              <a className="gate__brand" href={config.landingUrl}>
                 <span className="gate__mark">
-                  <TargetIcon aria-hidden="true" />
+                  <SparkIcon aria-hidden="true" />
                 </span>
                 <span className="gate__wordmark">Leadflow</span>
-              </div>
+              </a>
               <h1 className="gate__headline">
                 Local business leads,
                 <br />
@@ -115,7 +88,16 @@ export function AppLayout() {
     );
   }
 
-  const meta = TAB_META[tab];
+  const email = session.user.email ?? null;
+  const userMeta = (session.user.user_metadata ?? {}) as {
+    full_name?: string;
+    name?: string;
+  };
+  // Prefer a real name from the auth provider; fall back to the email handle.
+  const userName =
+    userMeta.full_name?.trim() ||
+    userMeta.name?.trim() ||
+    (email ? email.split("@")[0] : "Account");
 
   const goToSearch = () => {
     setSavedSearch(null);
@@ -138,13 +120,13 @@ export function AppLayout() {
       <Sidebar
         activeTab={tab}
         collapsed={sidebarCollapsed}
-        userEmail={session.user.email ?? null}
+        userName={userName}
+        userEmail={email}
         onTabChange={handleTabChange}
         onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
         onSignOut={() => void signOut()}
       />
       <div className="app-main">
-        <TopBar title={meta.title} subtitle={meta.subtitle} onNewSearch={goToSearch} />
         <div className="app-content">
           {tab === "dashboard" && (
             <DashboardPage

@@ -21,6 +21,7 @@ class Lead(BaseModel):
     has_website: bool = False
     status: str = ""
     maps_uri: str = ""
+    outreach_status: str = "new"
 
 
 class LeadSearchResponse(BaseModel):

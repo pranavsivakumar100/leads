@@ -11,12 +11,38 @@ import { ApiError } from "@/lib/api/client";
 import {
   exportXlsx,
   getSavedLeads,
+  listLibraryLeads,
   listServices,
   runSearch,
+  setLeadStatus,
   type Lead,
+  type OutreachStatus,
   type ServicePreset,
 } from "@/lib/api/leads";
 import { downloadBlob, leadsToCsv, slug } from "@/lib/csv";
+
+function isCalled(status: OutreachStatus | undefined): boolean {
+  return !!status && status !== "new";
+}
+
+/** Merge library outreach statuses onto scrape results by place_id. */
+async function withOutreachStatuses(rows: Lead[]): Promise<Lead[]> {
+  try {
+    const library = await listLibraryLeads();
+    const byPlace = new Map(
+      library.map((l) => [l.place_id, l.outreach_status] as const),
+    );
+    return rows.map((l) => ({
+      ...l,
+      outreach_status: byPlace.get(l.place_id) ?? l.outreach_status ?? "new",
+    }));
+  } catch {
+    return rows.map((l) => ({
+      ...l,
+      outreach_status: l.outreach_status ?? "new",
+    }));
+  }
+}
 
 export interface SavedSearchRef {
   id: string;
@@ -83,6 +109,7 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
     setError(null);
     resetFilters();
     getSavedLeads(savedSearch.id)
+      .then((rows) => withOutreachStatuses(rows))
       .then((rows) => {
         if (cancelled) return;
         setLeads(rows);
@@ -145,7 +172,7 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
         deep,
         radius_km: deep ? radiusKm : 15,
       });
-      setLeads(res.leads);
+      setLeads(await withOutreachStatuses(res.leads));
       setMeta({ service: res.service, location: res.location });
     } catch (err) {
       if (err instanceof ApiError && err.status === 503) {
@@ -157,6 +184,32 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleCalled = (placeId: string, called: boolean) => {
+    if (!placeId) return;
+    const next: OutreachStatus = called ? "contacted" : "new";
+    const previous =
+      leads?.find((l) => l.place_id === placeId)?.outreach_status ?? "new";
+    setLeads((prev) =>
+      prev
+        ? prev.map((l) =>
+            l.place_id === placeId ? { ...l, outreach_status: next } : l,
+          )
+        : prev,
+    );
+    setLeadStatus(placeId, next).catch(() => {
+      setLeads((prev) =>
+        prev
+          ? prev.map((l) =>
+              l.place_id === placeId
+                ? { ...l, outreach_status: previous }
+                : l,
+            )
+          : prev,
+      );
+      setError("Couldn't update call status. Try again.");
+    });
   };
 
   const doCsv = () => {
@@ -421,11 +474,19 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
                     <th className="num">Rating</th>
                     <th className="num">Reviews</th>
                     <th className="num">Score</th>
+                    <th>Called</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredLeads.map((l, i) => (
-                    <tr key={`${l.name}-${i}`}>
+                    <tr
+                      key={l.place_id || `${l.name}-${i}`}
+                      className={
+                        isCalled(l.outreach_status)
+                          ? "lead-table__row--called"
+                          : undefined
+                      }
+                    >
                       <td className="num muted">{i + 1}</td>
                       <td>
                         <a href={l.maps_uri} target="_blank" rel="noreferrer" className="lead-name">
@@ -455,6 +516,20 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
                       <td className="num muted">{l.reviews}</td>
                       <td className="num">
                         <span className="score">{l.score.toFixed(2)}</span>
+                      </td>
+                      <td>
+                        <label className="called-toggle">
+                          <input
+                            type="checkbox"
+                            checked={isCalled(l.outreach_status)}
+                            disabled={!l.place_id}
+                            onChange={(e) =>
+                              toggleCalled(l.place_id, e.target.checked)
+                            }
+                            aria-label={`Mark ${l.name} as called`}
+                          />
+                          <span className="called-toggle__track" aria-hidden="true" />
+                        </label>
                       </td>
                     </tr>
                   ))}

@@ -1842,6 +1842,71 @@ body {
   cursor: pointer;
 }
 
+/* Called toggle on Search results */
+.called-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.called-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.called-toggle__track {
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--surface-muted, #e4e7ec);
+  border: 1px solid var(--border-strong, #cdd3dd);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.called-toggle__track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.15);
+  transition: transform 0.15s ease;
+}
+
+.called-toggle input:checked + .called-toggle__track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.called-toggle input:checked + .called-toggle__track::after {
+  transform: translateX(16px);
+}
+
+.called-toggle input:focus-visible + .called-toggle__track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.called-toggle input:disabled + .called-toggle__track {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.lead-table__row--called {
+  opacity: 0.72;
+}
+
+.lead-table__row--called .lead-name {
+  text-decoration: none;
+}
+
 /* ======================= Scripts & Sessions ======================= */
 .script-title-input {
   border: none;

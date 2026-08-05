@@ -21,6 +21,9 @@ _LEAD_FIELDS = (
     "maps_uri",
 )
 
+# Fields returned when reopening a saved search (includes outreach status).
+_SAVED_LEAD_FIELDS = _LEAD_FIELDS + ("outreach_status",)
+
 
 def save_search(
     client: Client,
@@ -98,7 +101,7 @@ def get_search_leads(client: Client, user_id: str, search_id: str) -> list[dict]
         return None
     res = (
         client.table("leads")
-        .select(", ".join(_LEAD_FIELDS))
+        .select(", ".join(_SAVED_LEAD_FIELDS))
         .eq("search_id", search_id)
         .order("score", desc=True)
         .execute()

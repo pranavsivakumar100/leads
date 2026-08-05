@@ -2,6 +2,8 @@ import { config } from "@/config";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { supabase } from "@/lib/supabase";
 
+export type OutreachStatus = "new" | "contacted" | "interested" | "passed";
+
 export interface Lead {
   place_id: string;
   name: string;
@@ -14,6 +16,8 @@ export interface Lead {
   has_website: boolean;
   status: string;
   maps_uri: string;
+  /** Present on saved/library leads; defaults to "new" on fresh scrapes. */
+  outreach_status?: OutreachStatus;
 }
 
 export interface ServicePreset {
@@ -81,8 +85,6 @@ export function getDashboardStats(): Promise<DashboardStats> {
 export function getSavedLeads(searchId: string): Promise<Lead[]> {
   return apiFetch<Lead[]>(`/history/${searchId}/leads`);
 }
-
-export type OutreachStatus = "new" | "contacted" | "interested" | "passed";
 
 export interface LibraryLead extends Lead {
   outreach_status: OutreachStatus;

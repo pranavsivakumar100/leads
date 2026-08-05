@@ -88,6 +88,12 @@ Dashboard · Search · Leads · Campaigns · Sessions · Skills
 
 ---
 
+### Search page — Called toggle (Aug 5)
+- Search results table gained a **Called** toggle per row (on = `contacted`, off = `new`)
+- Uses the same `PATCH /leads/{place_id}/status` as the Leads page, so statuses sync across Search ↔ Leads
+- Fresh scrapes hydrate status from the library; saved searches return `outreach_status` from DB
+- Called rows dim slightly so you can scan what's left to dial
+
 ## Next up (not built)
 
 - [ ] **Coach v2** — Twilio browser softphone (dual-channel audio), streaming suggestions (SSE/websocket) for lower latency

@@ -1,5 +1,6 @@
 import { config } from "@/config";
 import { apiFetch, ApiError } from "@/lib/api/client";
+import type { LeadHours } from "@/lib/hours";
 import { supabase } from "@/lib/supabase";
 
 export type OutreachStatus = "new" | "contacted" | "interested" | "passed";
@@ -16,6 +17,8 @@ export interface Lead {
   has_website: boolean;
   status: string;
   maps_uri: string;
+  /** Weekly Google hours; used to compute Open/Closed in the table. */
+  hours?: LeadHours | null;
   /** Present on saved/library leads; defaults to "new" on fresh scrapes. */
   outreach_status?: OutreachStatus;
   /** Flag for needs-a-follow-up; independent of Called. */

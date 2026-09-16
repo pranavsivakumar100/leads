@@ -16,7 +16,8 @@ LOCATION_TYPES = [
     "sublocality",
 ]
 
-# Fields we request. Kept lean to control billing (SKU is field-tier based).
+# Fields we request. Billing uses the highest SKU in the mask. Phone / rating /
+# website already put Text Search on Enterprise, so regularOpeningHours is free.
 FIELD_MASK = ",".join(
     [
         "places.id",
@@ -29,6 +30,8 @@ FIELD_MASK = ",".join(
         "places.businessStatus",
         "places.googleMapsUri",
         "places.location",
+        "places.regularOpeningHours",
+        "places.timeZone",
         "nextPageToken",
     ]
 )

@@ -1,4 +1,33 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+class HoursPoint(BaseModel):
+    day: int = Field(ge=0, le=6)
+    hour: int = Field(ge=0, le=23)
+    minute: int = Field(0, ge=0, le=59)
+
+
+class HoursPeriod(BaseModel):
+    open: HoursPoint
+    close: HoursPoint | None = None
+
+
+class LeadHours(BaseModel):
+    timezone: str = ""
+    periods: list[HoursPeriod] = []
+    weekday_text: list[str] = []
+
+
+def _parse_hours(value: object) -> LeadHours | None:
+    if value is None or value == "":
+        return None
+    try:
+        parsed = value if isinstance(value, LeadHours) else LeadHours.model_validate(value)
+    except Exception:
+        return None
+    if not parsed.timezone or not parsed.periods:
+        return None
+    return parsed
 
 
 class LeadSearchRequest(BaseModel):
@@ -21,8 +50,14 @@ class Lead(BaseModel):
     has_website: bool = False
     status: str = ""
     maps_uri: str = ""
+    hours: LeadHours | None = None
     outreach_status: str = "new"
     follow_up: bool = False
+
+    @field_validator("hours", mode="before")
+    @classmethod
+    def _hours(cls, value: object) -> LeadHours | None:
+        return _parse_hours(value)
 
 
 class LeadSearchResponse(BaseModel):
@@ -62,12 +97,18 @@ class LibraryLead(BaseModel):
     has_website: bool = False
     status: str = ""
     maps_uri: str = ""
+    hours: LeadHours | None = None
     outreach_status: str = "new"
     follow_up: bool = False
     service: str = ""
     location: str = ""
     times_seen: int = 1
     created_at: str = ""
+
+    @field_validator("hours", mode="before")
+    @classmethod
+    def _hours(cls, value: object) -> LeadHours | None:
+        return _parse_hours(value)
 
 
 class OutreachStatusUpdate(BaseModel):

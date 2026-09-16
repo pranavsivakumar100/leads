@@ -19,6 +19,7 @@ _LEAD_FIELDS = (
     "has_website",
     "status",
     "maps_uri",
+    "hours",
 )
 
 # Fields returned when reopening a saved search (includes outreach status).

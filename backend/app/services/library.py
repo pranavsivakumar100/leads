@@ -18,8 +18,8 @@ def list_leads(client: Client, user_id: str) -> list[dict]:
         client.table("leads")
         .select(
             "place_id, name, phone, website, address, rating, reviews, score, "
-            "has_website, status, maps_uri, outreach_status, follow_up, created_at, "
-            "searches(service, location)"
+            "has_website, status, maps_uri, hours, outreach_status, follow_up, "
+            "created_at, searches(service, location)"
         )
         .eq("user_id", user_id)
         .order("created_at", desc=True)
@@ -49,12 +49,13 @@ def set_status(client: Client, user_id: str, place_id: str, status: str) -> bool
     """Update outreach status on every copy of this lead the user owns."""
     if status not in OUTREACH_STATUSES:
         return False
+    # update() already returns representation; .select() after .eq() 500s on
+    # this supabase-py (FilterRequestBuilder has no select).
     res = (
         client.table("leads")
         .update({"outreach_status": status})
         .eq("user_id", user_id)
         .eq("place_id", place_id)
-        .select("place_id")
         .execute()
     )
     return bool(res.data)
@@ -69,7 +70,6 @@ def set_follow_up(
         .update({"follow_up": follow_up})
         .eq("user_id", user_id)
         .eq("place_id", place_id)
-        .select("place_id")
         .execute()
     )
     return bool(res.data)

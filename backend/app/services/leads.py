@@ -104,6 +104,48 @@ def _city_center(client: PlacesClient, location: str) -> dict | None:
     return places[0].get("location")
 
 
+def _clock_point(raw: dict | None) -> dict | None:
+    if not isinstance(raw, dict) or "day" not in raw:
+        return None
+    try:
+        day = int(raw.get("day", 0))
+        hour = int(raw.get("hour", 0))
+        minute = int(raw.get("minute", 0))
+    except (TypeError, ValueError):
+        return None
+    if hour == 24:
+        hour = 0
+    if not (0 <= day <= 6 and 0 <= hour <= 23 and 0 <= minute <= 59):
+        return None
+    return {"day": day, "hour": hour, "minute": minute}
+
+
+def extract_hours(place: dict) -> dict | None:
+    """Compact weekly schedule for computing open/closed at display time."""
+    tz = (place.get("timeZone") or {}).get("id") or ""
+    raw = place.get("regularOpeningHours") or {}
+    periods: list[dict] = []
+    for item in raw.get("periods") or []:
+        if not isinstance(item, dict):
+            continue
+        opn = _clock_point(item.get("open"))
+        if not opn:
+            continue
+        period: dict = {"open": opn}
+        close = _clock_point(item.get("close"))
+        if close:
+            period["close"] = close
+        periods.append(period)
+    if not tz or not periods:
+        return None
+    weekday_text = [
+        str(line)
+        for line in (raw.get("weekdayDescriptions") or [])
+        if str(line).strip()
+    ]
+    return {"timezone": tz, "periods": periods, "weekday_text": weekday_text}
+
+
 def _process(places: list[dict]) -> list[dict]:
     rated = [
         p
@@ -131,6 +173,7 @@ def _process(places: list[dict]) -> list[dict]:
                 "has_website": bool(website),
                 "status": p.get("businessStatus", ""),
                 "maps_uri": p.get("googleMapsUri", ""),
+                "hours": extract_hours(p),
             }
         )
     rows.sort(key=lambda x: (x["score"], x["reviews"]), reverse=True)

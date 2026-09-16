@@ -155,7 +155,7 @@ Copied foundational patterns from `~/Documents/GitHub/dreams`:
 | Input | Verdict |
 |---|---|
 | Latino-owned / women-owned / etc. | **Not available** in Places API (GBP UI attribute only). Even if available, ethically risky as a filter. Bilingual outreach angle is valid as messaging, not as a scrape filter. |
-| Business hours / "closed weekends" | Needs `regularOpeningHours` field (extra API cost). Useful for missed-call angle — future. |
+| Business hours / "closed weekends" | Shipped Sep 16 — Open/Closed badge from `regularOpeningHours` (see [SEP_16.md](./SEP_16.md)). |
 | Exclude chains/franchises | Heuristic only (name/domain repetition). Future. |
 | Multi-service batch search | Supported in CLI script; not yet in web UI. Future. |
 | Phone present filter | Easy post-fetch filter — not yet added. |

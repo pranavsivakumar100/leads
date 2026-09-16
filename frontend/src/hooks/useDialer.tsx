@@ -75,8 +75,22 @@ function isDestroyedError(err: unknown): boolean {
   return /device has been destroyed/i.test(msg);
 }
 
+function twilioErrorCode(err: unknown): number | undefined {
+  if (err && typeof err === "object" && "code" in err) {
+    const code = (err as { code?: unknown }).code;
+    if (typeof code === "number") return code;
+  }
+  return undefined;
+}
+
+function isRetryableTwilioError(err: unknown): boolean {
+  if (isDestroyedError(err)) return true;
+  const code = twilioErrorCode(err);
+  return code === 31000 || code === 31005 || code === 31205;
+}
+
 function deviceIsUsable(device: Device | null): boolean {
-  return Boolean(device && device.state !== Device.State.Destroyed);
+  return Boolean(device && device.state === Device.State.Registered);
 }
 
 function twilioErrorMessage(err: unknown): string {
@@ -86,11 +100,16 @@ function twilioErrorMessage(err: unknown): string {
     }
     return err.message;
   }
+  const code = twilioErrorCode(err);
+  if (code === 31205) return "Call token expired. Try the number again.";
+  if (code === 31204) return "Dialer sign-in failed. Refresh the page and try again.";
+  if (code === 31002) return "The other side declined the call.";
+  if (code === 31003) return "The call timed out before anyone answered.";
+  if (code === 31005 || code === 31000) {
+    return "The call couldn’t connect. Try again in a moment.";
+  }
   if (err && typeof err === "object") {
-    const rec = err as { message?: string; code?: number };
-    if (rec.code === 31005 || rec.code === 31000) {
-      return "Twilio couldn’t reach the dialer webhook. Local calls need a public URL (tunnel or Railway).";
-    }
+    const rec = err as { message?: string };
     if (typeof rec.message === "string" && rec.message) return rec.message;
   }
   if (err instanceof Error && err.message) return err.message;
@@ -229,6 +248,7 @@ export function DialerProvider({ children }: { children: ReactNode }) {
       logLevel: 0,
       codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
       closeProtection: true,
+      enableImprovedSignalingErrorPrecision: true,
     });
     device.on("error", (err) => {
       if (isDestroyedError(err) || device.state === Device.State.Destroyed) {
@@ -245,7 +265,27 @@ export function DialerProvider({ children }: { children: ReactNode }) {
         tokenRef.current = null;
       }
     });
+    device.on("unregistered", () => {
+      if (deviceRef.current === device && device.state !== Device.State.Destroyed) {
+        deviceRef.current = null;
+        tokenRef.current = null;
+      }
+    });
+    device.on("tokenWillExpire", () => {
+      void getVoiceToken()
+        .then(({ token: next }) => {
+          tokenRef.current = next;
+          if (deviceRef.current === device) device.updateToken(next);
+        })
+        .catch(() => undefined);
+    });
     deviceRef.current = device;
+    try {
+      await device.register();
+    } catch (err) {
+      discardDevice();
+      throw err;
+    }
     return device;
   }, [discardDevice]);
 
@@ -388,7 +428,7 @@ export function DialerProvider({ children }: { children: ReactNode }) {
       const call = await device.connect({ params: { To: dest } });
       bindCall(call);
     } catch (err) {
-      if (isDestroyedError(err)) {
+      if (isRetryableTwilioError(err)) {
         discardDevice();
         try {
           const device = await ensureDevice();

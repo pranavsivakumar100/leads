@@ -1299,6 +1299,14 @@ body {
   outline-offset: -2px;
 }
 
+.lead-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .lead-name {
   font-weight: 600;
   color: var(--text);
@@ -1380,6 +1388,31 @@ body {
   background: var(--accent-soft);
   color: var(--accent-text);
   border: 1px solid var(--accent-soft);
+}
+
+.badge--hours {
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+
+.badge--hours-open {
+  background: var(--ok-bg);
+  color: var(--ok-text);
+  border: 1px solid var(--ok-border);
+}
+
+.badge--hours-closed,
+.badge--hours-perm_closed {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.badge--hours-temp_closed {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border: 1px solid var(--warn-border);
 }
 
 /* ============================= Auth gate / landing ============================= */

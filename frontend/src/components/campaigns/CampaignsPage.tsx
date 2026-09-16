@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
 import { LeadPhone } from "@/components/dialer/LeadPhone";
+import { LeadNameCell } from "@/components/leads/LeadNameCell";
 import {
   CloseIcon,
   DownloadIcon,
@@ -264,15 +265,13 @@ export function CampaignsPage({ onGoToLeads }: CampaignsPageProps) {
                   {leads.map((l) => (
                     <tr key={l.place_id}>
                       <td>
-                        <a
-                          href={l.maps_uri}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="lead-name"
-                        >
-                          {l.name}
-                        </a>
-                        <div className="lead-address">{l.address}</div>
+                        <LeadNameCell
+                          name={l.name}
+                          address={l.address}
+                          mapsUri={l.maps_uri}
+                          hours={l.hours}
+                          status={l.status}
+                        />
                       </td>
                       <td>
                         {l.phone ? (

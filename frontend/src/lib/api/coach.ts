@@ -1,4 +1,6 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, ApiError } from "@/lib/api/client";
+import { config } from "@/config";
+import { supabase } from "@/lib/supabase";
 
 export interface ScriptStep {
   title: string;
@@ -97,7 +99,8 @@ export type SessionOutcome =
   | "not_interested"
   | "callback"
   | "voicemail"
-  | "no_answer";
+  | "no_answer"
+  | "meeting_booked";
 
 export type EventRole = "prospect" | "rep" | "coach" | "system";
 
@@ -195,4 +198,36 @@ export function addSessionEvent(
     method: "POST",
     body: JSON.stringify({ t_ms: 0, ...event }),
   });
+}
+
+export async function transcribeUtterance(
+  sessionId: string,
+  blob: Blob,
+  filename: string,
+): Promise<string> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const body = new FormData();
+  body.append("file", blob, filename);
+  const response = await fetch(
+    `${config.apiBaseUrl}/sessions/${sessionId}/transcribe`,
+    {
+      method: "POST",
+      headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      body,
+    },
+  );
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const payload = await response.json();
+      detail = payload.detail ?? detail;
+    } catch {
+      // keep status text
+    }
+    throw new ApiError(detail, response.status);
+  }
+  const payload = (await response.json()) as { text?: string };
+  return (payload.text || "").trim();
 }

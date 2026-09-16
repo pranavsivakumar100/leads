@@ -5,3 +5,7 @@ supabase==2.18.1
 requests==2.32.3
 openpyxl==3.1.5
 httpx==0.28.1
+twilio==9.11.1
+python-multipart==0.0.20
+pypdf==6.1.1
+python-docx==1.2.0

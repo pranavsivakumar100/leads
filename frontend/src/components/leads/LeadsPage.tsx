@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { DownloadIcon, SearchIcon, TargetIcon, UsersIcon } from "@/components/icons";
-import { listOffers, type Offer } from "@/lib/api/coach";
+import { LeadPhone } from "@/components/dialer/LeadPhone";
 import {
   addLeadsToCampaign,
   createCampaign,
@@ -14,7 +14,7 @@ import {
   type OutreachStatus,
 } from "@/lib/api/leads";
 import { downloadBlob, leadsToCsv } from "@/lib/csv";
-import { FIT_TIER_LABEL, scoreFit } from "@/lib/offerFit";
+import { onCrmLeadPatch } from "@/lib/crmEvents";
 
 const STATUS_OPTIONS: { value: OutreachStatus; label: string }[] = [
   { value: "new", label: "New" },
@@ -38,10 +38,6 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [website, setWebsite] = useState<WebsiteFilter>("any");
 
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [offerId, setOfferId] = useState("");
-  const [strongOnly, setStrongOnly] = useState(false);
-
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [adding, setAdding] = useState(false);
@@ -64,28 +60,33 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
       .catch(() => {
         // Non-critical — the add-to-campaign picker just stays empty.
       });
-    listOffers()
-      .then((rows) => {
-        if (!cancelled) setOffers(rows);
-      })
-      .catch(() => {
-        // Non-critical — the offer-fit selector just stays empty.
-      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const selectedOffer = useMemo(
-    () => offers.find((o) => o.id === offerId) ?? null,
-    [offers, offerId],
-  );
-  const fitActive = !!selectedOffer && selectedOffer.fit_type !== "any";
+  useEffect(() => {
+    return onCrmLeadPatch((patch) => {
+      setLeads((prev) =>
+        prev
+          ? prev.map((l) =>
+              l.place_id === patch.placeId
+                ? {
+                    ...l,
+                    follow_up: patch.followUp ?? l.follow_up,
+                    outreach_status: patch.outreachStatus ?? l.outreach_status,
+                  }
+                : l,
+            )
+          : prev,
+      );
+    });
+  }, []);
 
   const filtered = useMemo(() => {
     if (!leads) return [];
     const q = query.trim().toLowerCase();
-    const rows = leads.filter((l) => {
+    return leads.filter((l) => {
       if (statusFilter !== "all" && l.outreach_status !== statusFilter) return false;
       if (website === "yes" && !l.has_website) return false;
       if (website === "no" && l.has_website) return false;
@@ -98,21 +99,9 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
       ) {
         return false;
       }
-      if (fitActive && strongOnly) {
-        const { tier } = scoreFit(l, selectedOffer!.fit_type);
-        if (tier !== "strong") return false;
-      }
       return true;
     });
-
-    if (fitActive) {
-      const ft = selectedOffer!.fit_type;
-      return [...rows].sort(
-        (a, b) => scoreFit(b, ft).score - scoreFit(a, ft).score,
-      );
-    }
-    return rows;
-  }, [leads, query, statusFilter, website, fitActive, strongOnly, selectedOffer]);
+  }, [leads, query, statusFilter, website]);
 
   const changeStatus = (placeId: string, status: OutreachStatus) => {
     const previous = leads?.find((l) => l.place_id === placeId)?.outreach_status;
@@ -218,9 +207,7 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
   const filtersActive =
     query.trim() !== "" ||
     statusFilter !== "all" ||
-    website !== "any" ||
-    offerId !== "" ||
-    strongOnly;
+    website !== "any";
   const loading = leads === null && !error;
 
   return (
@@ -355,41 +342,6 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
               </select>
             </div>
 
-            {offers.length > 0 && (
-              <div className="filter-bar__group">
-                <label className="filter-bar__label" htmlFor="lf-offer">
-                  Offer fit
-                </label>
-                <select
-                  id="lf-offer"
-                  className="filter-select"
-                  value={offerId}
-                  onChange={(e) => {
-                    setOfferId(e.target.value);
-                    if (!e.target.value) setStrongOnly(false);
-                  }}
-                >
-                  <option value="">None</option>
-                  {offers.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {fitActive && (
-              <label className="filter-bar__toggle">
-                <input
-                  type="checkbox"
-                  checked={strongOnly}
-                  onChange={(e) => setStrongOnly(e.target.checked)}
-                />
-                Strong fit only
-              </label>
-            )}
-
             {filtersActive && (
               <button
                 type="button"
@@ -398,8 +350,6 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
                   setQuery("");
                   setStatusFilter("all");
                   setWebsite("any");
-                  setOfferId("");
-                  setStrongOnly(false);
                 }}
               >
                 Clear filters
@@ -465,7 +415,6 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
                     </th>
                     <th>Business</th>
                     <th>Found via</th>
-                    {fitActive && <th>Fit</th>}
                     <th>Phone</th>
                     <th>Website</th>
                     <th className="num">Rating</th>
@@ -499,25 +448,9 @@ export function LeadsPage({ onNewSearch }: LeadsPageProps) {
                         <div>{l.service}</div>
                         <div className="lead-address">{l.location}</div>
                       </td>
-                      {fitActive &&
-                        (() => {
-                          const fit = scoreFit(l, selectedOffer!.fit_type);
-                          return (
-                            <td>
-                              <span className={`fit-badge fit-badge--${fit.tier}`}>
-                                {FIT_TIER_LABEL[fit.tier]}
-                              </span>
-                              {fit.reason && (
-                                <div className="fit-reason">{fit.reason}</div>
-                              )}
-                            </td>
-                          );
-                        })()}
                       <td>
                         {l.phone ? (
-                          <a href={`tel:${l.phone}`} className="lead-link">
-                            {l.phone}
-                          </a>
+                          <LeadPhone phone={l.phone} name={l.name} placeId={l.place_id} />
                         ) : (
                           <span className="muted">—</span>
                         )}

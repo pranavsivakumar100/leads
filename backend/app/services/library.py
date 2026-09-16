@@ -18,7 +18,7 @@ def list_leads(client: Client, user_id: str) -> list[dict]:
         client.table("leads")
         .select(
             "place_id, name, phone, website, address, rating, reviews, score, "
-            "has_website, status, maps_uri, outreach_status, created_at, "
+            "has_website, status, maps_uri, outreach_status, follow_up, created_at, "
             "searches(service, location)"
         )
         .eq("user_id", user_id)
@@ -54,6 +54,22 @@ def set_status(client: Client, user_id: str, place_id: str, status: str) -> bool
         .update({"outreach_status": status})
         .eq("user_id", user_id)
         .eq("place_id", place_id)
+        .select("place_id")
+        .execute()
+    )
+    return bool(res.data)
+
+
+def set_follow_up(
+    client: Client, user_id: str, place_id: str, follow_up: bool
+) -> bool:
+    """Set follow-up flag on every copy of this lead the user owns."""
+    res = (
+        client.table("leads")
+        .update({"follow_up": follow_up})
+        .eq("user_id", user_id)
+        .eq("place_id", place_id)
+        .select("place_id")
         .execute()
     )
     return bool(res.data)

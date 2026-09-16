@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 
 from app.api.deps import CurrentUserDep, SettingsDep, SupabaseDep
@@ -11,10 +11,13 @@ from app.schemas.coach import (
     CoachSuggestion,
     SessionEvent,
     SessionEventCreate,
+    TranscribeResult,
 )
 from app.services import coach as coach_service
-from app.services import scripts as scripts_service
+from app.services import knowledge as knowledge_service
 from app.services import sessions as sessions_service
+from app.services import settings as settings_service
+from app.services import transcribe as transcribe_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -36,8 +39,8 @@ async def create_session(
         lead_place_id=payload.lead_place_id,
         lead_name=payload.lead_name,
         campaign_id=payload.campaign_id,
-        script_id=payload.script_id,
-        offer=payload.offer.strip(),
+        script_id=None,
+        offer="",
     )
     return CallSessionDetail(**row)
 
@@ -95,11 +98,14 @@ async def coach_next_line(
     client: SupabaseDep,
     settings: SettingsDep,
 ) -> CoachSuggestion:
-    """Suggest the rep's next line from the offer, script, and live transcript."""
-    if not settings.coach_enabled:
+    """Suggest the rep's next line from enabled Skills docs and the live transcript."""
+    secrets = await run_in_threadpool(
+        settings_service.resolve, client, user.id, settings
+    )
+    if not secrets.coach_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI coach is not configured (missing OPENAI_API_KEY).",
+            detail="Add your OpenAI API key in Settings to use the coach.",
         )
     session = await run_in_threadpool(
         sessions_service.get_session, client, user.id, session_id
@@ -109,23 +115,18 @@ async def coach_next_line(
             status_code=status.HTTP_404_NOT_FOUND, detail="Session not found."
         )
 
-    script_steps: list[dict] = []
-    if session.get("script_id"):
-        script = await run_in_threadpool(
-            scripts_service.get_script, client, user.id, session["script_id"]
-        )
-        if script:
-            script_steps = script.get("steps") or []
+    knowledge = await run_in_threadpool(
+        knowledge_service.enabled_texts, client, user.id
+    )
 
     try:
         text = await run_in_threadpool(
             coach_service.suggest_next_line,
-            api_key=settings.openai_api_key,
-            base_url=settings.coach_base_url,
-            model=settings.coach_model,
+            api_key=secrets.openai_api_key,
+            base_url=secrets.coach_base_url,
+            model=secrets.coach_model,
             lead_name=session.get("lead_name", ""),
-            offer=session.get("offer", ""),
-            script_steps=script_steps,
+            knowledge=knowledge,
             transcript=[t.model_dump() for t in payload.transcript],
         )
     except coach_service.CoachError as exc:
@@ -144,6 +145,47 @@ async def coach_next_line(
         t_ms=0,
     )
     return CoachSuggestion(text=text)
+
+
+@router.post("/{session_id}/transcribe", response_model=TranscribeResult)
+async def transcribe_utterance(
+    session_id: str,
+    user: CurrentUserDep,
+    client: SupabaseDep,
+    settings: SettingsDep,
+    file: UploadFile = File(...),
+) -> TranscribeResult:
+    """Whisper a short clip from one call channel (rep or prospect)."""
+    secrets = await run_in_threadpool(
+        settings_service.resolve, client, user.id, settings
+    )
+    if not secrets.coach_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Add your OpenAI API key in Settings to transcribe the call.",
+        )
+    session = await run_in_threadpool(
+        sessions_service.get_session, client, user.id, session_id
+    )
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found."
+        )
+    data = await file.read()
+    try:
+        text = await run_in_threadpool(
+            transcribe_service.transcribe_audio,
+            api_key=secrets.openai_api_key,
+            base_url=secrets.coach_base_url,
+            data=data,
+            filename=file.filename or "clip.webm",
+            mime_type=file.content_type or "application/octet-stream",
+        )
+    except transcribe_service.TranscribeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)
+        ) from exc
+    return TranscribeResult(text=text)
 
 
 @router.post(

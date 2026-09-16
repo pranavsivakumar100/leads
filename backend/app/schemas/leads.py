@@ -22,6 +22,7 @@ class Lead(BaseModel):
     status: str = ""
     maps_uri: str = ""
     outreach_status: str = "new"
+    follow_up: bool = False
 
 
 class LeadSearchResponse(BaseModel):
@@ -62,6 +63,7 @@ class LibraryLead(BaseModel):
     status: str = ""
     maps_uri: str = ""
     outreach_status: str = "new"
+    follow_up: bool = False
     service: str = ""
     location: str = ""
     times_seen: int = 1
@@ -70,6 +72,10 @@ class LibraryLead(BaseModel):
 
 class OutreachStatusUpdate(BaseModel):
     status: str = Field(..., pattern="^(new|contacted|interested|passed)$")
+
+
+class FollowUpUpdate(BaseModel):
+    follow_up: bool
 
 
 class CampaignStatusCounts(BaseModel):

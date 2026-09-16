@@ -1,7 +1,7 @@
 """Real-time sales coach — suggests the rep's next line during a live call.
 
-Uses any OpenAI-compatible chat completions API. The prompt is grounded in
-the session's offer, the attached script, and the rolling transcript.
+Grounded in Skills docs the account enabled for the coach, plus the
+rolling transcript.
 """
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ Rules:
 - Reply with ONLY the exact words the rep should say next. No preamble, no
   quotes, no explanations, no markdown.
 - 1-2 sentences max. Conversational, natural, confident. Never robotic.
-- Follow the rep's script framework when one is provided, but adapt to what
-  the prospect actually said - handle objections before advancing the script.
+- Follow the enabled playbooks when they fit, but adapt to what the
+  prospect actually said — handle objections before advancing.
 - If the prospect asked a question, answer it first.
 - If the call is going well, move toward the close (booking a time).
-- Never invent facts about the rep's product beyond the offer description.
+- Never invent facts about the product beyond the playbooks.
 """
 
 _TIMEOUT = httpx.Timeout(12.0, connect=4.0)
@@ -32,23 +32,25 @@ class CoachError(Exception):
 def _build_context(
     *,
     lead_name: str,
-    offer: str,
-    script_steps: list[dict],
+    knowledge: list[dict],
     transcript: list[dict],
 ) -> str:
     parts: list[str] = []
     if lead_name:
         parts.append(f"Business being called: {lead_name}")
-    if offer:
-        parts.append(f"What the rep is selling: {offer}")
-    if script_steps:
-        lines = []
-        for i, step in enumerate(script_steps, 1):
-            title = step.get("title") or f"Step {i}"
-            body = (step.get("body") or "").strip()
-            lines.append(f"{i}. {title}: {body}")
-        parts.append("Rep's script framework:\n" + "\n".join(lines))
-
+    if knowledge:
+        blocks = []
+        for doc in knowledge:
+            title = doc.get("name") or "Untitled"
+            body = (doc.get("text") or "").strip()
+            if not body:
+                continue
+            blocks.append(f"### {title}\n{body}")
+        if blocks:
+            parts.append(
+                "Playbooks and facts the rep enabled for the coach "
+                "(do not invent beyond this):\n\n" + "\n\n".join(blocks)
+            )
     if transcript:
         lines = []
         for turn in transcript[-16:]:  # rolling window keeps the prompt tight
@@ -68,15 +70,13 @@ def suggest_next_line(
     base_url: str,
     model: str,
     lead_name: str,
-    offer: str,
-    script_steps: list[dict],
+    knowledge: list[dict],
     transcript: list[dict],
 ) -> str:
     """One coach suggestion. Synchronous — callers run it in a threadpool."""
     context = _build_context(
         lead_name=lead_name,
-        offer=offer,
-        script_steps=script_steps,
+        knowledge=knowledge,
         transcript=transcript,
     )
     try:

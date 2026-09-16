@@ -18,6 +18,8 @@ export interface Lead {
   maps_uri: string;
   /** Present on saved/library leads; defaults to "new" on fresh scrapes. */
   outreach_status?: OutreachStatus;
+  /** Flag for needs-a-follow-up; independent of Called. */
+  follow_up?: boolean;
 }
 
 export interface ServicePreset {
@@ -88,6 +90,7 @@ export function getSavedLeads(searchId: string): Promise<Lead[]> {
 
 export interface LibraryLead extends Lead {
   outreach_status: OutreachStatus;
+  follow_up: boolean;
   service: string;
   location: string;
   times_seen: number;
@@ -105,6 +108,16 @@ export function setLeadStatus(
   return apiFetch<void>(`/leads/${encodeURIComponent(placeId)}/status`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
+  });
+}
+
+export function setLeadFollowUp(
+  placeId: string,
+  followUp: boolean,
+): Promise<void> {
+  return apiFetch<void>(`/leads/${encodeURIComponent(placeId)}/follow-up`, {
+    method: "PATCH",
+    body: JSON.stringify({ follow_up: followUp }),
   });
 }
 

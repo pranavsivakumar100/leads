@@ -12,6 +12,7 @@ SESSION_OUTCOMES = (
     "callback",
     "voicemail",
     "no_answer",
+    "meeting_booked",
 )
 
 EVENT_ROLES = ("prospect", "rep", "coach", "system")
@@ -135,10 +136,14 @@ class CoachSuggestion(BaseModel):
     text: str
 
 
+class TranscribeResult(BaseModel):
+    text: str = ""
+
+
 class CallSessionUpdate(BaseModel):
     outcome: str | None = Field(
         None,
-        pattern="^(in_progress|connected|interested|not_interested|callback|voicemail|no_answer)$",
+        pattern="^(in_progress|connected|interested|not_interested|callback|voicemail|no_answer|meeting_booked)$",
     )
     notes: str | None = Field(None, max_length=8000)
     offer: str | None = Field(None, max_length=2000)

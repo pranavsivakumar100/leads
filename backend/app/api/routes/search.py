@@ -14,32 +14,35 @@ from app.schemas.leads import (
 )
 from app.services import history as history_service
 from app.services import leads as leads_service
+from app.services import settings as settings_service
 from app.services.export import leads_to_xlsx
 from app.services.places import PlacesClient, PlacesError
 
 router = APIRouter(prefix="/search", tags=["search"])
 
 
-def _require_api_key(settings) -> str:
-    if not settings.scraping_enabled:
+def _maps_key(settings, client, user_id: str) -> str:
+    secrets = settings_service.resolve(client, user_id, settings)
+    if not secrets.scraping_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Lead scraping is not configured (missing GOOGLE_MAPS_API_KEY).",
+            detail="Add your Google Maps API key in Settings to run a search.",
         )
-    return settings.google_maps_api_key
+    return secrets.google_maps_api_key
 
 
 @router.get("/locations/autocomplete", response_model=list[LocationSuggestion])
 async def autocomplete_locations(
     input: str,
     settings: SettingsDep,
-    _user: CurrentUserDep,
+    user: CurrentUserDep,
+    client: SupabaseDep,
 ) -> list[LocationSuggestion]:
     """Suggest cities / areas as the user types a location."""
     query = input.strip()
     if len(query) < 2:
         return []
-    api_key = _require_api_key(settings)
+    api_key = _maps_key(settings, client, user.id)
     try:
         rows = await run_in_threadpool(
             PlacesClient(api_key).autocomplete, query
@@ -67,7 +70,7 @@ async def run_search(
     user: CurrentUserDep,
     client: SupabaseDep,
 ) -> LeadSearchResponse:
-    api_key = _require_api_key(settings)
+    api_key = _maps_key(settings, client, user.id)
     try:
         rows = await run_in_threadpool(
             leads_service.run_search,

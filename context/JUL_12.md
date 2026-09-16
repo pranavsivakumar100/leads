@@ -2,6 +2,8 @@
 
 > **Standing rule:** Update this file (and add new dated entries under `context/`) whenever we make a relevant product, infra, or architecture change.
 
+Latest session: [SEP_15.md](./SEP_15.md) (Jul 13: [JUL_13.md](./JUL_13.md)).
+
 ---
 
 ## Project overview

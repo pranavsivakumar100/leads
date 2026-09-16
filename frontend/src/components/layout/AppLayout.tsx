@@ -2,11 +2,14 @@ import { useState } from "react";
 
 import { AuthModal } from "@/components/auth/AuthModal";
 import { CampaignsPage } from "@/components/campaigns/CampaignsPage";
+import { FollowUpPage } from "@/components/crm/FollowUpPage";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
+import { DialPad } from "@/components/dialer/DialPad";
 import { LeadsPage } from "@/components/leads/LeadsPage";
 import { SearchPage, type SavedSearchRef } from "@/components/search/SearchPage";
 import { SkillsPage } from "@/components/skills/SkillsPage";
 import { SessionsPage } from "@/components/sessions/SessionsPage";
+import { SettingsPage } from "@/components/settings/SettingsPage";
 import { CheckIcon, SparkIcon } from "@/components/icons";
 import { config } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
@@ -127,6 +130,7 @@ export function AppLayout() {
         onSignOut={() => void signOut()}
       />
       <div className="app-main">
+        <DialPad />
         <div className="app-content">
           {tab === "dashboard" && (
             <DashboardPage
@@ -135,14 +139,21 @@ export function AppLayout() {
             />
           )}
           {tab === "search" && <SearchPage savedSearch={savedSearch} />}
+          {tab === "followup" && (
+            <FollowUpPage
+              onNewSearch={goToSearch}
+              onGoToLeads={() => setTab("leads")}
+            />
+          )}
           {tab === "leads" && <LeadsPage onNewSearch={goToSearch} />}
           {tab === "campaigns" && (
             <CampaignsPage onGoToLeads={() => setTab("leads")} />
           )}
           {tab === "sessions" && (
-            <SessionsPage onGoToScripts={() => setTab("skills")} />
+            <SessionsPage onGoToSkills={() => setTab("skills")} />
           )}
           {tab === "skills" && <SkillsPage />}
+          {tab === "settings" && <SettingsPage displayName={userName} />}
         </div>
       </div>
     </div>

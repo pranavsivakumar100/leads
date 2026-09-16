@@ -1,30 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
-import { MicIcon, PhoneIcon, PlusIcon, TrashIcon } from "@/components/icons";
-
-import { LiveCallView } from "./LiveCallView";
+import { PhoneIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import {
   createSession,
   deleteSession,
   getSession,
-  listOffers,
-  listScripts,
   listSessions,
   updateSession,
   type CallSession,
   type CallSessionDetail,
-  type Offer,
-  type Script,
   type SessionOutcome,
 } from "@/lib/api/coach";
-import { listLibraryLeads, type LibraryLead } from "@/lib/api/leads";
+import { formatDuration } from "@/lib/phone";
 
 const OUTCOMES: { value: SessionOutcome; label: string }[] = [
   { value: "in_progress", label: "In progress" },
   { value: "connected", label: "Connected" },
   { value: "interested", label: "Interested" },
   { value: "not_interested", label: "Not interested" },
-  { value: "callback", label: "Callback" },
+  { value: "callback", label: "Follow up" },
+  { value: "meeting_booked", label: "Meeting booked" },
   { value: "voicemail", label: "Voicemail" },
   { value: "no_answer", label: "No answer" },
 ];
@@ -44,18 +40,22 @@ function formatWhen(iso: string): string {
   });
 }
 
-interface SessionsPageProps {
-  onGoToScripts: () => void;
+function callLength(startedAt: string, endedAt: string | null): string {
+  if (!endedAt) return "—";
+  const start = new Date(startedAt).getTime();
+  const end = new Date(endedAt).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return "—";
+  return formatDuration(Math.round((end - start) / 1000));
 }
 
-export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
-  const [sessions, setSessions] = useState<CallSession[] | null>(null);
-  const [scripts, setScripts] = useState<Script[]>([]);
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [leads, setLeads] = useState<LibraryLead[]>([]);
-  const [error, setError] = useState<string | null>(null);
+interface SessionsPageProps {
+  onGoToSkills: () => void;
+}
 
-  const [creating, setCreating] = useState(false);
+export function SessionsPage({ onGoToSkills }: SessionsPageProps) {
+  const [sessions, setSessions] = useState<CallSession[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [logging, setLogging] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
 
   const refresh = () =>
@@ -65,19 +65,12 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
 
   useEffect(() => {
     void refresh();
-    listScripts().then(setScripts).catch(() => undefined);
-    listOffers().then(setOffers).catch(() => undefined);
-    listLibraryLeads().then(setLeads).catch(() => undefined);
   }, []);
-
-  const scriptName = (id: string | null) =>
-    id ? scripts.find((s) => s.id === id)?.name ?? "Deleted script" : null;
 
   if (openId) {
     return (
       <SessionDetail
         sessionId={openId}
-        scripts={scripts}
         onBack={() => {
           setOpenId(null);
           void refresh();
@@ -105,7 +98,7 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
         <div className="panel">
           <div className="search-loading">
             <span className="spinner" aria-hidden="true" />
-            <p>Loading sessions…</p>
+            <p>Loading call log…</p>
           </div>
         </div>
       )}
@@ -114,30 +107,27 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
         <section className="panel">
           <div className="panel__header">
             <div>
-              <h2 className="panel__title">Call sessions</h2>
+              <h2 className="panel__title">Call log</h2>
               <p className="results-sub">
-                A record of each call — review the outcome, notes, and (soon) the
-                live coaching transcript.
+                Every dial from the pad lands here. Review outcome, notes, and
+                transcript.
               </p>
             </div>
             <button
               type="button"
-              className="btn btn--primary"
-              onClick={() => setCreating(true)}
+              className="btn btn--secondary"
+              onClick={() => setLogging(true)}
             >
               <PlusIcon aria-hidden="true" />
-              New session
+              Log a call
             </button>
           </div>
 
-          {creating && (
-            <NewSessionForm
-              leads={leads}
-              scripts={scripts}
-              offers={offers}
-              onCancel={() => setCreating(false)}
+          {logging && (
+            <LogCallForm
+              onCancel={() => setLogging(false)}
               onCreated={(session) => {
-                setCreating(false);
+                setLogging(false);
                 setSessions((prev) => (prev ? [session, ...prev] : [session]));
                 setOpenId(session.id);
               }}
@@ -145,24 +135,20 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
             />
           )}
 
-          {sessions.length === 0 && !creating ? (
+          {sessions.length === 0 && !logging ? (
             <div className="empty-state">
               <span className="empty-state__icon">
                 <PhoneIcon aria-hidden="true" />
               </span>
-              <h3 className="empty-state__title">No sessions yet</h3>
+              <h3 className="empty-state__title">No calls yet</h3>
               <p className="empty-state__text">
-                Start a session before a call to keep notes and outcome in one
-                place. Live AI coaching will attach here next.
+                Click a phone number on Search, Leads, or Follow-up. The coach
+                uses{" "}
+                <button type="button" className="linklike" onClick={onGoToSkills}>
+                  Skills
+                </button>{" "}
+                docs you turned on.
               </p>
-              <button
-                type="button"
-                className="btn btn--primary empty-state__cta"
-                onClick={() => setCreating(true)}
-              >
-                <PlusIcon aria-hidden="true" />
-                New session
-              </button>
             </div>
           ) : sessions.length > 0 ? (
             <div className="table-wrap">
@@ -170,9 +156,9 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
                 <thead>
                   <tr>
                     <th>Lead</th>
-                    <th>Script</th>
                     <th>Outcome</th>
                     <th>When</th>
+                    <th>Length</th>
                     <th className="num">Transcript</th>
                   </tr>
                 </thead>
@@ -188,13 +174,13 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
                           {s.lead_name || "Untitled call"}
                         </span>
                       </td>
-                      <td>{scriptName(s.script_id) ?? <span className="muted">—</span>}</td>
                       <td>
                         <span className={`session-badge session-badge--${s.outcome}`}>
                           {OUTCOME_LABEL[s.outcome]}
                         </span>
                       </td>
                       <td>{formatWhen(s.started_at)}</td>
+                      <td>{callLength(s.started_at, s.ended_at)}</td>
                       <td className="num">
                         {s.event_count > 0 ? (
                           `${s.event_count} lines`
@@ -210,196 +196,85 @@ export function SessionsPage({ onGoToScripts }: SessionsPageProps) {
           ) : null}
         </section>
       )}
-
-      {sessions && sessions.length > 0 && scripts.length === 0 && (
-        <p className="results-sub" style={{ marginTop: 12 }}>
-          Tip: create a{" "}
-          <button type="button" className="linklike" onClick={onGoToScripts}>
-            call script
-          </button>{" "}
-          so the coach has a framework to follow.
-        </p>
-      )}
     </div>
   );
 }
 
-interface NewSessionFormProps {
-  leads: LibraryLead[];
-  scripts: Script[];
-  offers: Offer[];
-  onCancel: () => void;
-  onCreated: (session: CallSessionDetail) => void;
-  onError: (msg: string) => void;
-}
-
-function offerToText(offer: Offer): string {
-  return [offer.name, offer.description, offer.pricing]
-    .filter(Boolean)
-    .join(" — ");
-}
-
-function NewSessionForm({
-  leads,
-  scripts,
-  offers,
+function LogCallForm({
   onCancel,
   onCreated,
   onError,
-}: NewSessionFormProps) {
-  const [leadPlaceId, setLeadPlaceId] = useState("");
-  const [manualName, setManualName] = useState("");
-  const [scriptId, setScriptId] = useState("");
-  const [offer, setOffer] = useState(
-    () => localStorage.getItem("leadflow:lastOffer") ?? "",
-  );
+}: {
+  onCancel: () => void;
+  onCreated: (session: CallSessionDetail) => void;
+  onError: (msg: string) => void;
+}) {
+  const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const selectedLead = useMemo(
-    () => leads.find((l) => l.place_id === leadPlaceId) ?? null,
-    [leads, leadPlaceId],
-  );
-
-  const submit = async () => {
-    if (saving) return;
-    const leadName = selectedLead?.name ?? manualName.trim();
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || saving) return;
     setSaving(true);
     try {
-      const session = await createSession({
-        lead_place_id: selectedLead?.place_id ?? "",
-        lead_name: leadName,
-        script_id: scriptId || null,
-        offer: offer.trim(),
-      });
-      if (offer.trim()) {
-        localStorage.setItem("leadflow:lastOffer", offer.trim());
-      }
-      onCreated(session);
+      const session = await createSession({ lead_name: name.trim() });
+      await updateSession(session.id, { ended: true, outcome: "connected" });
+      onCreated({ ...session, ended_at: new Date().toISOString(), outcome: "connected" });
     } catch {
-      onError("Couldn't start the session.");
+      onError("Couldn't log the call.");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="new-session">
-      <div className="new-session__row">
-        <label className="field-label">Lead</label>
-        {leads.length > 0 ? (
-          <select
-            className="filter-select"
-            value={leadPlaceId}
-            onChange={(e) => setLeadPlaceId(e.target.value)}
-          >
-            <option value="">Manual entry…</option>
-            {leads.map((l) => (
-              <option key={l.place_id} value={l.place_id}>
-                {l.name}
-                {l.phone ? ` · ${l.phone}` : ""}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {!leadPlaceId && (
-          <input
-            className="text-input"
-            value={manualName}
-            onChange={(e) => setManualName(e.target.value)}
-            placeholder="Business name"
-          />
-        )}
-      </div>
-
-      <div className="new-session__row">
-        <label className="field-label">Script</label>
-        <select
-          className="filter-select"
-          value={scriptId}
-          onChange={(e) => setScriptId(e.target.value)}
-        >
-          <option value="">No script</option>
-          {scripts.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="new-session__row">
-        <label className="field-label">Offer — what you're selling</label>
-        {offers.length > 0 && (
-          <select
-            className="filter-select"
-            value=""
-            onChange={(e) => {
-              const picked = offers.find((o) => o.id === e.target.value);
-              if (picked) setOffer(offerToText(picked));
-            }}
-            aria-label="Use a saved offer"
-          >
-            <option value="">Use a saved offer…</option>
-            {offers.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        )}
-        <textarea
-          className="script-step__body"
-          value={offer}
-          onChange={(e) => setOffer(e.target.value)}
-          placeholder="e.g. AI receptionist that answers every call 24/7 and books jobs — $299/mo, 14-day free trial"
-          rows={2}
+    <form className="session-log-form" onSubmit={(e) => void onSubmit(e)}>
+      <label className="settings-field">
+        <span className="field-label">Business</span>
+        <input
+          className="text-input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Who you called"
+          autoFocus
         />
-      </div>
-
-      <div className="new-session__actions">
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={() => void submit()}
-          disabled={saving || (!selectedLead && !manualName.trim())}
-        >
-          {saving ? "Starting…" : "Start session"}
-        </button>
-        <button type="button" className="btn btn--ghost" onClick={onCancel}>
+      </label>
+      <div className="settings-actions">
+        <button type="button" className="btn btn--secondary" onClick={onCancel}>
           Cancel
         </button>
+        <button
+          type="submit"
+          className="btn btn--primary"
+          disabled={!name.trim() || saving}
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
       </div>
-    </div>
+    </form>
   );
-}
-
-interface SessionDetailProps {
-  sessionId: string;
-  scripts: Script[];
-  onBack: () => void;
-  onDeleted: () => void;
-  onError: (msg: string) => void;
 }
 
 function SessionDetail({
   sessionId,
-  scripts,
   onBack,
   onDeleted,
   onError,
-}: SessionDetailProps) {
+}: {
+  sessionId: string;
+  onBack: () => void;
+  onDeleted: () => void;
+  onError: (msg: string) => void;
+}) {
   const [session, setSession] = useState<CallSessionDetail | null>(null);
   const [notes, setNotes] = useState("");
-  const [offer, setOffer] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
-  const [live, setLive] = useState(false);
 
   const loadSession = useCallback(() => {
     getSession(sessionId)
       .then((s) => {
         setSession(s);
         setNotes(s.notes);
-        setOffer(s.offer);
       })
       .catch(() => onError("Couldn't load the session."));
   }, [sessionId, onError]);
@@ -407,11 +282,6 @@ function SessionDetail({
   useEffect(() => {
     loadSession();
   }, [loadSession]);
-
-  const script = useMemo(
-    () => scripts.find((s) => s.id === session?.script_id) ?? null,
-    [scripts, session],
-  );
 
   const changeOutcome = async (outcome: SessionOutcome) => {
     if (!session) return;
@@ -436,24 +306,14 @@ function SessionDetail({
     }
   };
 
-  const saveOffer = async () => {
-    if (!session || offer === session.offer) return;
-    try {
-      const updated = await updateSession(session.id, { offer });
-      setSession(updated);
-    } catch {
-      onError("Couldn't save the offer.");
-    }
-  };
-
   const remove = async () => {
     if (!session) return;
-    if (!window.confirm("Delete this session? This can't be undone.")) return;
+    if (!window.confirm("Delete this call? This can't be undone.")) return;
     try {
       await deleteSession(session.id);
       onDeleted();
     } catch {
-      onError("Couldn't delete the session.");
+      onError("Couldn't delete the call.");
     }
   };
 
@@ -463,26 +323,9 @@ function SessionDetail({
         <div className="panel">
           <div className="search-loading">
             <span className="spinner" aria-hidden="true" />
-            <p>Loading session…</p>
+            <p>Loading call…</p>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  if (live) {
-    return (
-      <div className="search-page">
-        <section className="panel">
-          <LiveCallView
-            session={session}
-            script={script}
-            onEnd={() => {
-              setLive(false);
-              loadSession();
-            }}
-          />
-        </section>
       </div>
     );
   }
@@ -493,22 +336,17 @@ function SessionDetail({
         <div className="panel__header">
           <div>
             <button type="button" className="campaign-back" onClick={onBack}>
-              ← All sessions
+              ← All calls
             </button>
             <h2 className="panel__title">{session.lead_name || "Untitled call"}</h2>
             <p className="results-sub">
-              {new Date(session.started_at).toLocaleString()}
+              {formatWhen(session.started_at)}
+              {session.ended_at
+                ? ` · ${callLength(session.started_at, session.ended_at)}`
+                : ""}
             </p>
           </div>
           <div className="results-actions">
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => setLive(true)}
-            >
-              <MicIcon aria-hidden="true" />
-              Live call
-            </button>
             <select
               className="filter-select"
               value={session.outcome}
@@ -535,8 +373,8 @@ function SessionDetail({
               <div className="session-empty">
                 <PhoneIcon aria-hidden="true" />
                 <p>
-                  No transcript yet. When live AI coaching is enabled, the call
-                  transcript and suggested lines will appear here.
+                  No transcript. On the next live call, hit Listen on the dial
+                  pad to capture the conversation.
                 </p>
               </div>
             ) : (
@@ -556,40 +394,11 @@ function SessionDetail({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               onBlur={() => void saveNotes()}
-              placeholder="Post-call notes — who you spoke to, objections, next steps…"
+              placeholder="Who you spoke to, objections, next steps…"
               rows={5}
             />
             {savingNotes && <span className="muted">Saving…</span>}
           </div>
-
-          <aside className="session-col session-col--aside">
-            <h3 className="session-col__title">Offer</h3>
-            <textarea
-              className="script-step__body"
-              value={offer}
-              onChange={(e) => setOffer(e.target.value)}
-              onBlur={() => void saveOffer()}
-              placeholder="What you're selling on this call…"
-              rows={3}
-            />
-
-            <h3 className="session-col__title">Script</h3>
-            {script ? (
-              <div className="script-reference">
-                <div className="script-reference__name">{script.name}</div>
-                {script.steps.map((step, i) => (
-                  <div key={i} className="script-reference__step">
-                    <div className="script-reference__step-title">
-                      {step.title || `Step ${i + 1}`}
-                    </div>
-                    <div className="script-reference__step-body">{step.body}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="muted">No script attached to this session.</p>
-            )}
-          </aside>
         </div>
       </section>
     </div>

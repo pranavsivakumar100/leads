@@ -22,7 +22,7 @@ _LEAD_FIELDS = (
 )
 
 # Fields returned when reopening a saved search (includes outreach status).
-_SAVED_LEAD_FIELDS = _LEAD_FIELDS + ("outreach_status",)
+_SAVED_LEAD_FIELDS = _LEAD_FIELDS + ("outreach_status", "follow_up")
 
 
 def save_search(

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.concurrency import run_in_threadpool
 
 from app.api.deps import CurrentUserDep, SupabaseDep
-from app.schemas.leads import LibraryLead, OutreachStatusUpdate
+from app.schemas.leads import FollowUpUpdate, LibraryLead, OutreachStatusUpdate
 from app.services import library as library_service
 
 router = APIRouter(prefix="/leads", tags=["leads"])
@@ -25,6 +25,27 @@ async def update_status(
     """Set the outreach status for one lead (all copies the user owns)."""
     ok = await run_in_threadpool(
         library_service.set_status, client, user.id, place_id, payload.status
+    )
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found."
+        )
+
+
+@router.patch("/{place_id}/follow-up", status_code=status.HTTP_204_NO_CONTENT)
+async def update_follow_up(
+    place_id: str,
+    payload: FollowUpUpdate,
+    user: CurrentUserDep,
+    client: SupabaseDep,
+) -> None:
+    """Toggle follow-up on one lead (all copies the user owns)."""
+    ok = await run_in_threadpool(
+        library_service.set_follow_up,
+        client,
+        user.id,
+        place_id,
+        payload.follow_up,
     )
     if not ok:
         raise HTTPException(

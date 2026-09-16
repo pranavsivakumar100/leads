@@ -2,6 +2,8 @@
 
 Continuation of [JUL_12.md](./JUL_12.md). This session focused on outbound workflow (campaigns), sales-coach infrastructure, offer-aware lead qualification, and the first live AI coach prototype.
 
+Sep 15 work: [SEP_15.md](./SEP_15.md).
+
 ---
 
 ## Shipped today
@@ -82,21 +84,17 @@ COACH_BASE_URL=https://api.openai.com/v1   # optional; any OpenAI-compatible end
 
 ---
 
-## Sidebar (current)
+## Sidebar (as of this session)
 
 Dashboard · Search · Leads · Campaigns · Sessions · Skills
 
----
+Later work (Aug 5 Called toggle, Sep 15 dialer / Settings / Follow up) lives in [SEP_15.md](./SEP_15.md).
 
-### Search page — Called toggle (Aug 5)
-- Search results table gained a **Called** toggle per row (on = `contacted`, off = `new`)
-- Uses the same `PATCH /leads/{place_id}/status` as the Leads page, so statuses sync across Search ↔ Leads
-- Fresh scrapes hydrate status from the library; saved searches return `outreach_status` from DB
-- Called rows dim slightly so you can scan what's left to dial
+---
 
 ## Next up (not built)
 
-- [ ] **Coach v2** — Twilio browser softphone (dual-channel audio), streaming suggestions (SSE/websocket) for lower latency
+- [ ] **Coach v2** — stream dual-channel call audio into STT + suggestions (SSE/websocket)
 - [ ] **Outbound workflow** — phone-present filter; campaign dial mode (one lead at a time, big Call button, quick status, auto-advance)
 - [ ] Multi-service batch search in web UI
 - [ ] Deep search progress streaming / background jobs

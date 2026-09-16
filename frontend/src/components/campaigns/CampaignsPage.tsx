@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
+import { LeadPhone } from "@/components/dialer/LeadPhone";
 import {
   CloseIcon,
   DownloadIcon,
@@ -275,9 +276,7 @@ export function CampaignsPage({ onGoToLeads }: CampaignsPageProps) {
                       </td>
                       <td>
                         {l.phone ? (
-                          <a href={`tel:${l.phone}`} className="lead-link">
-                            {l.phone}
-                          </a>
+                          <LeadPhone phone={l.phone} name={l.name} placeId={l.place_id} />
                         ) : (
                           <span className="muted">—</span>
                         )}

@@ -121,10 +121,35 @@ export const LogOutIcon = (p: IconProps) => (
   </Svg>
 );
 
+export const SettingsIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+  </Svg>
+);
+
 export const CloseIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M18 6 6 18" />
     <path d="m6 6 12 12" />
+  </Svg>
+);
+
+export const BackspaceIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M20 5H9L3 12l6 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z" />
+    <path d="m12 9 6 6" />
+    <path d="m18 9-6 6" />
+  </Svg>
+);
+
+export const MicOffIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m2 2 20 20" />
+    <path d="M16.7 7.2A3 3 0 0 0 12 5v4.3" />
+    <path d="M8.2 8.2A3 3 0 0 0 9 10v2a3 3 0 0 0 4.9 2.3" />
+    <path d="M19 10v2a7 7 0 0 1-11.3 5.5" />
+    <path d="M12 19v3" />
   </Svg>
 );
 
@@ -204,6 +229,13 @@ export const ChevronUpIcon = (p: IconProps) => (
 export const ChevronDownIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="m6 9 6 6 6-6" />
+  </Svg>
+);
+
+export const FlagIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+    <path d="M4 22V15" />
   </Svg>
 );
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
+import { LeadPhone } from "@/components/dialer/LeadPhone";
 import {
   DownloadIcon,
   SearchIcon,
@@ -14,32 +15,49 @@ import {
   listLibraryLeads,
   listServices,
   runSearch,
+  setLeadFollowUp,
   setLeadStatus,
   type Lead,
   type OutreachStatus,
   type ServicePreset,
 } from "@/lib/api/leads";
 import { downloadBlob, leadsToCsv, slug } from "@/lib/csv";
+import { onCrmLeadPatch } from "@/lib/crmEvents";
 
 function isCalled(status: OutreachStatus | undefined): boolean {
   return !!status && status !== "new";
 }
 
-/** Merge library outreach statuses onto scrape results by place_id. */
+/** Merge library outreach flags onto scrape results by place_id. */
 async function withOutreachStatuses(rows: Lead[]): Promise<Lead[]> {
   try {
     const library = await listLibraryLeads();
     const byPlace = new Map(
-      library.map((l) => [l.place_id, l.outreach_status] as const),
+      library.map(
+        (l) =>
+          [
+            l.place_id,
+            {
+              outreach_status: l.outreach_status,
+              follow_up: l.follow_up,
+            },
+          ] as const,
+      ),
     );
-    return rows.map((l) => ({
-      ...l,
-      outreach_status: byPlace.get(l.place_id) ?? l.outreach_status ?? "new",
-    }));
+    return rows.map((l) => {
+      const known = byPlace.get(l.place_id);
+      return {
+        ...l,
+        outreach_status:
+          known?.outreach_status ?? l.outreach_status ?? "new",
+        follow_up: known?.follow_up ?? l.follow_up ?? false,
+      };
+    });
   } catch {
     return rows.map((l) => ({
       ...l,
       outreach_status: l.outreach_status ?? "new",
+      follow_up: l.follow_up ?? false,
     }));
   }
 }
@@ -96,6 +114,24 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
       .catch(() => {
         // Non-critical; the input still accepts a custom service.
       });
+  }, []);
+
+  useEffect(() => {
+    return onCrmLeadPatch((patch) => {
+      setLeads((prev) =>
+        prev
+          ? prev.map((l) =>
+              l.place_id === patch.placeId
+                ? {
+                    ...l,
+                    follow_up: patch.followUp ?? l.follow_up,
+                    outreach_status: patch.outreachStatus ?? l.outreach_status,
+                  }
+                : l,
+            )
+          : prev,
+      );
+    });
   }, []);
 
   // Load a previously saved search's leads when opened from the dashboard.
@@ -209,6 +245,29 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
           : prev,
       );
       setError("Couldn't update call status. Try again.");
+    });
+  };
+
+  const toggleFollowUp = (placeId: string, followUp: boolean) => {
+    if (!placeId) return;
+    const previous =
+      leads?.find((l) => l.place_id === placeId)?.follow_up ?? false;
+    setLeads((prev) =>
+      prev
+        ? prev.map((l) =>
+            l.place_id === placeId ? { ...l, follow_up: followUp } : l,
+          )
+        : prev,
+    );
+    setLeadFollowUp(placeId, followUp).catch(() => {
+      setLeads((prev) =>
+        prev
+          ? prev.map((l) =>
+              l.place_id === placeId ? { ...l, follow_up: previous } : l,
+            )
+          : prev,
+      );
+      setError("Couldn't update follow-up. Try again.");
     });
   };
 
@@ -475,6 +534,7 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
                     <th className="num">Reviews</th>
                     <th className="num">Score</th>
                     <th>Called</th>
+                    <th>Follow up</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -496,9 +556,7 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
                       </td>
                       <td>
                         {l.phone ? (
-                          <a href={`tel:${l.phone}`} className="lead-link">
-                            {l.phone}
-                          </a>
+                          <LeadPhone phone={l.phone} name={l.name} placeId={l.place_id} />
                         ) : (
                           <span className="muted">—</span>
                         )}
@@ -527,6 +585,20 @@ export function SearchPage({ savedSearch = null }: SearchPageProps) {
                               toggleCalled(l.place_id, e.target.checked)
                             }
                             aria-label={`Mark ${l.name} as called`}
+                          />
+                          <span className="called-toggle__track" aria-hidden="true" />
+                        </label>
+                      </td>
+                      <td>
+                        <label className="called-toggle called-toggle--follow">
+                          <input
+                            type="checkbox"
+                            checked={!!l.follow_up}
+                            disabled={!l.place_id}
+                            onChange={(e) =>
+                              toggleFollowUp(l.place_id, e.target.checked)
+                            }
+                            aria-label={`Mark ${l.name} for follow up`}
                           />
                           <span className="called-toggle__track" aria-hidden="true" />
                         </label>

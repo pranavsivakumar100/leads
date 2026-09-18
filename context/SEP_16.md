@@ -22,6 +22,9 @@ Continuation of [SEP_15.md](./SEP_15.md).
 - TwiML Voice URL is Railway (`/api/v1/voice/outbound`) and is reachable. Quick Cloudflare tunnels die; do not point Twilio at trycloudflare.
 - SDK 31005 is a generic connect error (expired token, declined, signaling drop), not proof the webhook is down. Device now `register()`s, only reuses a Registered device, refreshes the token, and retries 31005 once. Error copy no longer blames the webhook.
 
+### Prod frontend build
+- GitHub `ce77c41` deployed: backend OK, frontend **failed** (`tsc` on `useCallTranscript` Uint8Array vs DOM lib). Prod UI stayed on the last successful frontend from Sep 16 00:08. Cast the analyser buffer so `npm run build` passes.
+
 ---
 
 ## Key files

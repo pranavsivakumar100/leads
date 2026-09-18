@@ -28,7 +28,9 @@ function extFor(mime: string): string {
 }
 
 function rms(analyser: AnalyserNode, buf: Uint8Array): number {
-  analyser.getByteTimeDomainData(buf);
+  analyser.getByteTimeDomainData(
+    buf as Parameters<AnalyserNode["getByteTimeDomainData"]>[0],
+  );
   let sum = 0;
   for (let i = 0; i < buf.length; i++) {
     const n = (buf[i] - 128) / 128;

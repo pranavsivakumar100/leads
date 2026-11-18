@@ -7,7 +7,7 @@ from supabase import Client
 
 _SESSION_COLS = (
     "id, lead_place_id, lead_name, campaign_id, script_id, offer, outcome, "
-    "notes, started_at, ended_at"
+    "notes, started_at, ended_at, duration_sec"
 )
 
 

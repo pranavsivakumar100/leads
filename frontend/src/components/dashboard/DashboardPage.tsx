@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import type { ComponentType, SVGProps } from "react";
 
 import {
+  ChatIcon,
   MapPinIcon,
+  PhoneIcon,
   PlusIcon,
   SearchIcon,
   TrendUpIcon,
@@ -49,6 +51,18 @@ function buildKpis(stats: DashboardStats | null): Kpi[] {
       meta: "Higher with deep search",
       Icon: TrendUpIcon,
     },
+    {
+      label: "Dials today",
+      value: stats ? stats.dials_today.toLocaleString() : "—",
+      meta: "Calls placed",
+      Icon: PhoneIcon,
+    },
+    {
+      label: "Conversations",
+      value: stats ? stats.conversations_today.toLocaleString() : "—",
+      meta: "Today · answered, 30s+",
+      Icon: ChatIcon,
+    },
   ];
 }
 
@@ -93,7 +107,7 @@ export function DashboardPage({ onNewSearch, onOpenSearch }: DashboardPageProps)
 
   return (
     <div className="dashboard">
-      <section className="kpi-grid" aria-label="Overview">
+      <section className="kpi-grid kpi-grid--thirds" aria-label="Overview">
         {buildKpis(stats).map(({ label, value, meta, Icon }) => (
           <article key={label} className="kpi-card">
             <div className="kpi-card__top">

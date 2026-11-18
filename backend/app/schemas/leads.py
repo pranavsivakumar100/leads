@@ -83,6 +83,8 @@ class DashboardStats(BaseModel):
     searches_run: int = 0
     markets: int = 0
     avg_leads_per_search: float = 0.0
+    dials_today: int = 0
+    conversations_today: int = 0
 
 
 class LibraryLead(BaseModel):

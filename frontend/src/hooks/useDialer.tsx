@@ -165,7 +165,13 @@ export function DialerProvider({ children }: { children: ReactNode }) {
   const endSession = useCallback((outcome: SessionOutcome) => {
     const id = sessionIdRef.current;
     if (!id) return;
-    void updateSession(id, { ended: true, outcome }).catch(() => undefined);
+    const connectedAt = connectedAtRef.current;
+    const duration_sec = connectedAt
+      ? Math.max(0, Math.floor((Date.now() - connectedAt) / 1000))
+      : 0;
+    void updateSession(id, { ended: true, outcome, duration_sec }).catch(
+      () => undefined,
+    );
   }, []);
 
   const clearSession = useCallback(() => {

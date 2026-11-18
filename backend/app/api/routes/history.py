@@ -22,10 +22,14 @@ async def list_history(
 
 
 @router.get("/stats", response_model=DashboardStats)
-async def get_stats(user: CurrentUserDep, client: SupabaseDep) -> DashboardStats:
-    """Aggregate KPIs for the dashboard."""
+async def get_stats(
+    user: CurrentUserDep,
+    client: SupabaseDep,
+    tz: str = "UTC",
+) -> DashboardStats:
+    """Aggregate KPIs for the dashboard. `tz` is an IANA name for "today"."""
     stats = await run_in_threadpool(
-        history_service.dashboard_stats, client, user.id
+        history_service.dashboard_stats, client, user.id, tz
     )
     return DashboardStats(**stats)
 

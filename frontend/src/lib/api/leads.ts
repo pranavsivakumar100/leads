@@ -60,6 +60,8 @@ export interface DashboardStats {
   searches_run: number;
   markets: number;
   avg_leads_per_search: number;
+  dials_today: number;
+  conversations_today: number;
 }
 
 export interface LeadSearchParams {
@@ -84,7 +86,10 @@ export function listHistory(limit = 8): Promise<SearchHistoryItem[]> {
 }
 
 export function getDashboardStats(): Promise<DashboardStats> {
-  return apiFetch<DashboardStats>("/history/stats");
+  const tz = encodeURIComponent(
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  );
+  return apiFetch<DashboardStats>(`/history/stats?tz=${tz}`);
 }
 
 export function getSavedLeads(searchId: string): Promise<Lead[]> {

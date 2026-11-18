@@ -106,6 +106,7 @@ class CallSession(BaseModel):
     notes: str = ""
     started_at: str
     ended_at: str | None = None
+    duration_sec: int | None = None
     event_count: int = 0
 
 
@@ -148,3 +149,4 @@ class CallSessionUpdate(BaseModel):
     notes: str | None = Field(None, max_length=8000)
     offer: str | None = Field(None, max_length=2000)
     ended: bool | None = None
+    duration_sec: int | None = Field(None, ge=0, le=86400)

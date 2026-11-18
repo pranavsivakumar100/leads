@@ -27,6 +27,12 @@ Continuation of [SEP_15.md](./SEP_15.md).
 
 ---
 
+### West Coast Spanish contractors CSVs
+- Full scrape: `stuff/csv_west_coast/spanish_contractors.csv` (5411)
+- No website: `stuff/csv_west_coast/spanish_contractors_no_website.csv` (1424; 1351 with phone). CA 1159 / WA 141 / OR 94 / NV 30. Same columns, reranked. `stuff/` is gitignored.
+
+---
+
 ## Key files
 
 ```

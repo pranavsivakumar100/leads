@@ -123,6 +123,8 @@ export interface CallSession {
   notes: string;
   started_at: string;
   ended_at: string | null;
+  /** Seconds the call was connected. Absent on sessions logged before this was stored. */
+  duration_sec?: number | null;
   event_count: number;
 }
 
@@ -162,6 +164,7 @@ export function updateSession(
     notes?: string;
     offer?: string;
     ended?: boolean;
+    duration_sec?: number;
   },
 ): Promise<CallSessionDetail> {
   return apiFetch<CallSessionDetail>(`/sessions/${sessionId}`, {
